@@ -2,26 +2,181 @@
 @tailwind components;
 @tailwind utilities;
 
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&display=swap');
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --font-body: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
+  
+  /* Solid Professional Light Mode Colors Only */
+  --bg-base: #FCF9F2;
+  --bg-panel: #FDFBF7;
+  --bg-panel-hover: #F5EFE6;
+  --color-primary: #D2A679;
+  --color-hover: #C29668;
+  --text-main: #3E2F24;
+  --text-muted: #8E7A6B;
+  --text-highlight: #2A1D13;
+  --border-color: #EBDCCB;
+  --border-focus: #D2A679;
+  --color-error: #ff3b30;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
+  background-color: var(--bg-base);
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--bg-base) !important;
+  color: var(--text-main) !important;
+  font-family: var(--font-body) !important;
+  overflow-x: hidden;
+}
+
+/* Map existing Tailwind classes to solid light theme variables */
+.bg-white {
+  background-color: var(--bg-panel) !important;
+}
+.bg-slate-50, .bg-gray-50, .bg-slate-100, .bg-gray-100 {
+  background-color: transparent !important;
+}
+
+/* Maintain dark contrast areas but use a solid theme color instead of neon/dark mode */
+.bg-slate-900, .bg-gray-900, .bg-slate-800 {
+  background-color: var(--text-highlight) !important;
+  color: #ffffff !important;
+}
+
+.text-slate-900, .text-slate-800, .text-gray-900, .text-gray-800 {
+  color: var(--text-highlight) !important;
+}
+.text-slate-600, .text-slate-500, .text-gray-600, .text-gray-500 {
+  color: var(--text-muted) !important;
+}
+.border-slate-200, .border-slate-100, .border-gray-200, .border-slate-700, .border-slate-800 {
+  border-color: var(--border-color) !important;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600 !important;
+  letter-spacing: -0.02em !important;
+}
+
+/* Clean, flat glass panels with solid borders/shadows */
+.glass-panel {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+/* Base Input Styles Overrides */
+input[type="text"], input[type="password"], input[type="email"], select {
+  padding: 8px 12px !important;
+  background: var(--bg-panel) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 6px !important;
+  transition: border-color 0.2s ease !important;
+  outline: none !important;
+  color: var(--text-main) !important;
+}
+
+input:focus, select:focus {
+  border-color: var(--border-focus) !important;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-focus);
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+}
+
+@layer base {
+  /* Smooth global interactions */
+  a, button {
+    @apply transition-transform duration-300 ease-out;
+  }
+
+  /* Elegant Page Load Staggering - Clean & Solid */
+  main > section, main > div {
+    opacity: 0;
+    animation: saas-fade-in-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  main > *:nth-child(1) { animation-delay: 0.05s; }
+  main > *:nth-child(2) { animation-delay: 0.1s; }
+  main > *:nth-child(3) { animation-delay: 0.15s; }
+  main > *:nth-child(4) { animation-delay: 0.2s; }
+  main > *:nth-child(5) { animation-delay: 0.25s; }
+  main > *:nth-child(6) { animation-delay: 0.3s; }
+
+  /* Sticky Navigation slide-in */
+  nav {
+    animation: saas-slide-down 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  /* Solid Hover effects for typical SaaS Cards (links/buttons with .group) */
+  section a.group, section button.group {
+    @apply transition-transform duration-300 ease-out;
+  }
+
+  section a.group:hover, section button.group:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); /* Solid shadow */
+  }
+}
+
+/* Animations Definitions */
+@keyframes saas-fade-in-up {
+  0% {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes saas-slide-down {
+  0% {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Solid pulsing (no glowing shadows) */
+.animate-pulse {
+  animation: saas-pulse 2s ease-in-out infinite !important;
+}
+
+@keyframes saas-pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
   }
 }
