@@ -4,3 +4,10 @@
 *.env.example
 node_modules/
 **/node_modules/
+__pycache__/
+**/__pycache__/
+*.pyc
+.next/
+.git_bak/
+**/.git_bak/
+commit_files.sh
