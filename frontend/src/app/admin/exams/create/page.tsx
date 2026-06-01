@@ -11,18 +11,42 @@ export default function CreateExamPage() {
   const [meta, setMeta] = useState({ title: '', duration_minutes: 180, total_marks: 100, exam_type: 'fixed' });
   const [sections, setSections] = useState<any[]>([{ title: 'Section 1', duration_minutes: '', questions: [{ qtype: 'MCQ', difficulty_tier: 'medium', text: '', options: {A:'', B:'', C:'', D:''}, correct_key: '', marks: 4, negative_marks: -1 }] }]);
 
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
+
   const save = async () => {
+    setSaveError('');
+    setSaving(true);
     try {
-      await apiClient().post('/api/admin/exams', { ...meta, sections });
+      // Sanitize: convert empty string duration_minutes to null
+      const sanitizedSections = sections.map(s => ({
+        ...s,
+        duration_minutes: s.duration_minutes === '' || s.duration_minutes === null ? null : Number(s.duration_minutes),
+        questions: s.questions.map((q: any) => ({
+          ...q,
+          marks: Number(q.marks) || 4,
+          negative_marks: Number(q.negative_marks) || -1,
+        }))
+      }));
+      await apiClient().post('/api/admin/exams', { ...meta, sections: sanitizedSections });
       router.push('/admin/exams');
-    } catch { alert('Save failed'); }
+    } catch (err: any) { 
+      setSaveError(err.response?.data?.error || err.message || 'Save failed. Please try again.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
     <div className="max-w-4xl mx-auto p-6 md:p-12 animate-fadeIn space-y-8">
       <header className="flex justify-between items-center border-b border-themeBorder pb-6">
-        <h1 className="text-2xl font-semibold text-highlight">Exam Builder</h1>
-        <button onClick={save} className="btn btn-primary">Publish Exam</button>
+        <div>
+          <h1 className="text-2xl font-semibold text-highlight">Exam Builder</h1>
+          {saveError && <p className="text-red-500 text-sm mt-1">{saveError}</p>}
+        </div>
+        <button onClick={save} disabled={saving} className="btn btn-primary disabled:opacity-50">
+          {saving ? 'Publishing...' : 'Publish Exam'}
+        </button>
       </header>
 
       <div className="flex gap-4 border-b border-themeBorder">
