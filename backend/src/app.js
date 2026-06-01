@@ -6,6 +6,9 @@ const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 const errorHandler = require('./middleware/error.middleware');
 
+// Start BullMQ workers
+require('./workers/response.worker');
+
 const app = express();
 const PORT = process.env.PORT || 3001;
 
@@ -64,8 +67,8 @@ app.get('/health', async (req, res) => {
 // --- Global Error Handler ---
 app.use(errorHandler);
 
-app.listen(PORT, () => {
-  console.log(`🚀 Backend running on http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Backend running on port ${PORT}`);
 });
 
 module.exports = app;
