@@ -116,6 +116,29 @@ router.patch('/exams/:id', async (req, res, next) => {
 });
 
 /**
+ * GET /api/admin/exams/:examId/attempts
+ * List all attempts for an exam
+ */
+router.get('/exams/:examId/attempts', async (req, res, next) => {
+  try {
+    const { tenant_id } = req.user;
+    const { examId } = req.params;
+
+    const result = await pool.query(
+      `SELECT a.*, u.name as student_name, u.email,
+       (SELECT COUNT(*) FROM violations v WHERE v.attempt_id = a.id) as violation_count
+       FROM attempts a
+       JOIN users u ON u.id = a.user_id
+       WHERE a.exam_id = $1 AND a.tenant_id = $2
+       ORDER BY a.started_at DESC`,
+      [examId, tenant_id]
+    );
+
+    res.json({ status: 'success', attempts: result.rows });
+  } catch (err) { next(err); }
+});
+
+/**
  * GET /api/admin/attempts/:id/violations
  */
 router.get('/attempts/:attemptId/violations', async (req, res, next) => {

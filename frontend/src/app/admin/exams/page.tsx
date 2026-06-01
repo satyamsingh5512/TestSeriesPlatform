@@ -43,7 +43,7 @@ export default function AdminExamsPage() {
                   <td className="px-6 py-4 text-muted"><span className="status-tag">{ex.exam_type}</span></td>
                   <td className="px-6 py-4"><span className={`status-tag ${ex.status === 'published' ? 'status-success' : ''}`}>{ex.status}</span></td>
                   <td className="px-6 py-4 text-right space-x-2">
-                    <Link href={`/admin/proctoring`} className="text-accent hover:underline text-xs">Logs</Link>
+                    <Link href={`/admin/exams/${ex.id}/attempts`} className="text-accent hover:underline text-xs">Logs</Link>
                     <button className="text-muted hover:text-highlight text-xs ml-4">Edit</button>
                   </td>
                 </tr>
