@@ -1,5 +1,6 @@
 const express = require('express');
 const pool = require('../db/pool');
+const redis = require('../db/redis');
 const authMiddleware = require('../middleware/auth.middleware');
 const roleMiddleware = require('../middleware/role.middleware');
 
@@ -169,6 +170,42 @@ router.patch('/violations/:violationId', async (req, res, next) => {
     if (result.rows.length === 0) return res.status(404).json({ error: 'Violation not found' });
 
     res.json({ status: 'success', violation: result.rows[0] });
+  } catch (err) { next(err); }
+});
+
+/**
+ * PATCH /api/admin/questions/:id
+ * Update question and invalidate cache
+ */
+router.patch('/questions/:id', async (req, res, next) => {
+  try {
+    const { tenant_id } = req.user;
+    const { id } = req.params;
+    const { payload, correct_key, marks, negative_marks, explanation, difficulty_tier } = req.body;
+
+    const result = await pool.query(
+      `UPDATE questions
+       SET payload = COALESCE($1, payload),
+           correct_key = COALESCE($2, correct_key),
+           marks = COALESCE($3, marks),
+           negative_marks = COALESCE($4, negative_marks),
+           explanation = COALESCE($5, explanation),
+           difficulty_tier = COALESCE($6, difficulty_tier)
+       WHERE id = $7 AND tenant_id = $8
+       RETURNING id, exam_id`,
+      [
+        payload ? JSON.stringify(payload) : null,
+        correct_key, marks, negative_marks, explanation, difficulty_tier,
+        id, tenant_id
+      ]
+    );
+
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Question not found' });
+
+    const examId = result.rows[0].exam_id;
+    await redis.del(`exam:${examId}:questions`);
+
+    res.json({ status: 'success', question_id: result.rows[0].id });
   } catch (err) { next(err); }
 });
 
