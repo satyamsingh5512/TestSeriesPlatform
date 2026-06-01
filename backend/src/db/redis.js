@@ -1,26 +1,22 @@
-const Redis = require('ioredis');
+const { Redis } = require('@upstash/redis');
 
 let redis;
 
-if (process.env.REDIS_URL) {
-  redis = new Redis(process.env.REDIS_URL, {
-    maxRetriesPerRequest: null,
-    enableReadyCheck: false,
+if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
+  redis = new Redis({
+    url: process.env.UPSTASH_REDIS_REST_URL,
+    token: process.env.UPSTASH_REDIS_REST_TOKEN,
   });
-  redis.on('error', (err) => {
-    console.error('Redis error:', err.message);
-  });
-  console.log('✅ Redis connected via REDIS_URL');
+  console.log('✅ Upstash Redis connected (REST client)');
 } else {
-  // No Redis configured — create a mock client so app doesn't crash
-  console.warn('⚠️  REDIS_URL not set. Redis/BullMQ features are disabled.');
+  // Fallback no-op mock when Redis is not configured
+  console.warn('⚠️  Upstash Redis not configured. Caching is disabled.');
   redis = {
     get: async () => null,
     set: async () => null,
     del: async () => null,
-    on: () => {},
-    quit: async () => {},
   };
 }
 
 module.exports = redis;
+
