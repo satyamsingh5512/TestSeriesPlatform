@@ -16,7 +16,14 @@ export function LoginModal({ isOpen, onClose, onSwitch, onForgotPassword }: any)
     setError('');
     try {
       const { data } = await axios.post(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/auth/login`, form);
-      localStorage.setItem('token', data.token); localStorage.setItem('user', JSON.stringify(data.user)); router.push('/dashboard');
+      localStorage.setItem('token', data.token); 
+      localStorage.setItem('user', JSON.stringify(data.user));
+      // Role-based redirect
+      if (data.user.role === 'admin' || data.user.role === 'superadmin') {
+        router.push('/admin/exams');
+      } else {
+        router.push('/dashboard');
+      }
     } catch (err: any) { 
       setError(err.response?.data?.error || 'Login failed. Please try again.'); 
     }
