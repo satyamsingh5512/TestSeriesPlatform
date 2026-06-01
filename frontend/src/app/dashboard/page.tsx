@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
-import { BookOpen, Clock, Award, BarChart3, Zap, ChevronRight, LogOut, BrainCircuit, Target, Sun } from 'lucide-react';
+import { BookOpen, Clock, Award, BarChart3, Zap, ChevronRight, LogOut, BrainCircuit, Target, Sun, Star } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // ... (Interface definitions remain the same)
