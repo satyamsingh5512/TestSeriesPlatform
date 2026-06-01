@@ -8,10 +8,17 @@ function apiClient() { return axios.create({ baseURL: process.env.NEXT_PUBLIC_AP
 
 export default function ProctoringPage() {
   const { attemptId } = useParams<{ attemptId: string }>();
+  const router = useRouter();
   const [data, setData] = useState<any>(null);
+  const [error, setError] = useState('');
 
-  useEffect(() => { apiClient().get(`/api/admin/attempts/${attemptId}/violations`).then(r => setData(r.data)); }, [attemptId]);
+  useEffect(() => { 
+    apiClient().get(`/api/admin/attempts/${attemptId}/violations`)
+      .then(r => setData(r.data))
+      .catch((err) => setError(err.response?.data?.error || 'Failed to load attempt data.'));
+  }, [attemptId]);
 
+  if (error) return <div className="min-h-screen flex items-center justify-center p-6"><div className="panel max-w-md p-8 text-center"><p className="text-red-500 font-semibold mb-4">{error}</p><button onClick={() => router.push('/admin/exams')} className="btn btn-primary">Back to Admin</button></div></div>;
   if (!data) return <div className="min-h-screen flex items-center justify-center font-mono animate-pulseText text-muted">Loading Stream...</div>;
 
   return (

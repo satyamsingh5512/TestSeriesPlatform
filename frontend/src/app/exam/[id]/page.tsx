@@ -12,6 +12,8 @@ export default function ExamPage() {
   const [permissionsGranted, setPermissionsGranted] = useState(false);
   const [permCheck, setPermCheck] = useState({ camera: false, location: false, clipboard: false });
   const [loading, setLoading] = useState(true);
+  const [initError, setInitError] = useState('');
+  const [fullscreenError, setFullscreenError] = useState(false);
   const [examType, setExamType] = useState('fixed');
   const [questions, setQuestions] = useState<any[]>([]);
   const [currentIdx, setCurrentIdx] = useState(0);
@@ -52,7 +54,10 @@ export default function ExamPage() {
         Object.entries(data.responses || {}).forEach(([qId, r]: any) => { if (r.answer) saved[qId] = r.answer; });
         setAnswers(saved);
         setLoading(false);
-      } catch { router.push('/dashboard'); }
+      } catch (err: any) { 
+        setInitError(err.response?.data?.error || 'Failed to load exam. Please go back and try again.');
+        setLoading(false);
+      }
     }
     init();
   }, [id, router]);
@@ -92,10 +97,13 @@ export default function ExamPage() {
   };
 
   const startExam = async () => {
-    try { await document.documentElement.requestFullscreen(); setTimeout(() => setPermissionsGranted(true), 100); } catch { alert('Fullscreen required.'); }
+    setFullscreenError(false);
+    try { await document.documentElement.requestFullscreen(); setTimeout(() => setPermissionsGranted(true), 100); } 
+    catch { setFullscreenError(true); }
   };
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center font-mono animate-pulseText tracking-widest text-muted">Preparing Workspace...</div>;
+  if (loading && !initError) return <div className="min-h-screen flex items-center justify-center font-mono animate-pulseText tracking-widest text-muted">Preparing Workspace...</div>;
+  if (initError) return <div className="min-h-screen flex items-center justify-center p-6"><div className="panel max-w-md w-full p-8 text-center"><p className="text-red-500 font-semibold mb-4">{initError}</p><button onClick={() => router.push('/dashboard')} className="btn btn-primary">Back to Dashboard</button></div></div>;
 
   if (!permissionsGranted) return (
     <div className="min-h-screen flex items-center justify-center p-6 animate-fadeIn">
@@ -117,6 +125,7 @@ export default function ExamPage() {
           </button>
         </div>
         <button disabled={!(permCheck.camera && permCheck.location && permCheck.clipboard)} onClick={startExam} className="btn btn-primary w-full justify-center">Enter Secure Workspace</button>
+        {fullscreenError && <p className="text-red-500 text-xs mt-3 text-center">Fullscreen is required to start the exam. Please allow it in your browser settings.</p>}
       </div>
     </div>
   );
