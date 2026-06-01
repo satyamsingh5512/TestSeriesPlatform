@@ -239,13 +239,38 @@ router.post('/:id/respond', async (req, res, next) => {
       return res.status(400).json({ error: 'responses object is required' });
     }
 
-    // Push the responses object to BullMQ
-    await responseQueue.add('save_responses', { 
-      attemptId: req.params.id, 
-      responses 
-    });
-
-    res.json({ status: 'success', message: 'Responses queued for saving', queued: Object.keys(responses).length });
+    if (responseQueue) {
+      // Queue available — async background processing
+      await responseQueue.add('save_responses', { attemptId: req.params.id, responses });
+      res.json({ status: 'success', message: 'Responses queued for saving', queued: Object.keys(responses).length });
+    } else {
+      // No Redis — write directly to DB synchronously
+      const client = await pool.connect();
+      try {
+        await client.query('BEGIN');
+        for (const [questionId, data] of Object.entries(responses)) {
+          const { answer, time_spent_seconds, answer_changes, first_answer } = data;
+          await client.query(
+            `INSERT INTO responses (attempt_id, question_id, answer, time_spent_seconds, answer_changes, first_answer, synced_at)
+             VALUES ($1, $2, $3, $4, $5, $6, NOW())
+             ON CONFLICT (attempt_id, question_id) DO UPDATE SET
+               answer = EXCLUDED.answer,
+               time_spent_seconds = EXCLUDED.time_spent_seconds,
+               answer_changes = EXCLUDED.answer_changes,
+               first_answer = EXCLUDED.first_answer,
+               synced_at = NOW()`,
+            [req.params.id, questionId, answer ?? null, time_spent_seconds ?? 0, answer_changes ?? 0, first_answer ?? null]
+          );
+        }
+        await client.query('COMMIT');
+        res.json({ status: 'success', message: 'Responses saved directly', saved: Object.keys(responses).length });
+      } catch (err) {
+        await client.query('ROLLBACK');
+        throw err;
+      } finally {
+        client.release();
+      }
+    }
   } catch (err) { next(err); }
 });
 
