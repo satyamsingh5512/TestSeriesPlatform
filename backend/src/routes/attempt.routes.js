@@ -195,7 +195,7 @@ router.get('/:id/questions', async (req, res, next) => {
         [attempt.exam_id, tenant_id]
       );
       questions = qRes.rows;
-      await redis.set(cacheKey, JSON.stringify(questions), 'EX', 3600);
+      await redis.set(cacheKey, JSON.stringify(questions), { ex: 3600 });
     }
 
     // Also return any existing responses (for resume)
