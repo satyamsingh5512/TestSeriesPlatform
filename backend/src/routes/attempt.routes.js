@@ -183,7 +183,8 @@ router.get('/:id/questions', async (req, res, next) => {
     const cachedQuestions = await redis.get(cacheKey);
 
     if (cachedQuestions) {
-      questions = JSON.parse(cachedQuestions);
+      // @upstash/redis automatically parses JSON, but we handle both just in case
+      questions = typeof cachedQuestions === 'string' ? JSON.parse(cachedQuestions) : cachedQuestions;
     } else {
       const qRes = await pool.query(
         `SELECT q.id, q.qtype, q.payload, q.marks, q.negative_marks,
@@ -195,7 +196,8 @@ router.get('/:id/questions', async (req, res, next) => {
         [attempt.exam_id, tenant_id]
       );
       questions = qRes.rows;
-      await redis.set(cacheKey, JSON.stringify(questions), { ex: 3600 });
+      // Pass the raw object to Upstash, it handles stringification internally
+      await redis.set(cacheKey, questions, { ex: 3600 });
     }
 
     // Also return any existing responses (for resume)
