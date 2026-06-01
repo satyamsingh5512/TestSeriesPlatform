@@ -1,5 +1,7 @@
 const express = require('express');
 const pool = require('../db/pool');
+const redis = require('../db/redis');
+const responseQueue = require('../queues/response.queue');
 const authMiddleware = require('../middleware/auth.middleware');
 const scoringService = require('../services/scoring.service');
 const axios = require('axios');
@@ -176,15 +178,25 @@ router.get('/:id/questions', async (req, res, next) => {
       });
     }
 
-    const questions = await pool.query(
-      `SELECT q.id, q.qtype, q.payload, q.marks, q.negative_marks,
-              q.sequence, s.id AS section_id, s.title AS section_title, s.duration_minutes AS section_duration
-       FROM questions q
-       JOIN sections s ON s.id = q.section_id
-       WHERE s.exam_id = $1 AND q.tenant_id = $2
-       ORDER BY s.order_index, q.sequence`,
-      [attempt.exam_id, tenant_id]
-    );
+    const cacheKey = `exam:${attempt.exam_id}:questions`;
+    let questions;
+    const cachedQuestions = await redis.get(cacheKey);
+
+    if (cachedQuestions) {
+      questions = JSON.parse(cachedQuestions);
+    } else {
+      const qRes = await pool.query(
+        `SELECT q.id, q.qtype, q.payload, q.marks, q.negative_marks,
+                q.sequence, s.id AS section_id, s.title AS section_title, s.duration_minutes AS section_duration
+         FROM questions q
+         JOIN sections s ON s.id = q.section_id
+         WHERE s.exam_id = $1 AND q.tenant_id = $2
+         ORDER BY s.order_index, q.sequence`,
+        [attempt.exam_id, tenant_id]
+      );
+      questions = qRes.rows;
+      await redis.set(cacheKey, JSON.stringify(questions), 'EX', 3600);
+    }
 
     // Also return any existing responses (for resume)
     const responses = await pool.query(
@@ -196,7 +208,7 @@ router.get('/:id/questions', async (req, res, next) => {
 
     res.json({
       status: 'success',
-      questions: questions.rows,
+      questions: questions,
       responses: responseMap,
       attempt: {
         id: attempt.id,
@@ -227,31 +239,13 @@ router.post('/:id/respond', async (req, res, next) => {
       return res.status(400).json({ error: 'responses object is required' });
     }
 
-    const client = await pool.connect();
-    try {
-      await client.query('BEGIN');
-      for (const [questionId, data] of Object.entries(responses)) {
-        const { answer, time_spent_seconds, answer_changes, first_answer } = data;
-        await client.query(
-          `INSERT INTO responses (attempt_id, question_id, answer, time_spent_seconds, answer_changes, first_answer, synced_at)
-           VALUES ($1, $2, $3, $4, $5, $6, NOW())
-           ON CONFLICT (attempt_id, question_id) DO UPDATE SET
-             answer = EXCLUDED.answer,
-             time_spent_seconds = EXCLUDED.time_spent_seconds,
-             answer_changes = EXCLUDED.answer_changes,
-             first_answer = EXCLUDED.first_answer,
-             synced_at = NOW()`,
-          [req.params.id, questionId, answer ?? null, time_spent_seconds ?? 0, answer_changes ?? 0, first_answer ?? null]
-        );
-      }
-      await client.query('COMMIT');
-      res.json({ status: 'success', saved: Object.keys(responses).length });
-    } catch (err) {
-      await client.query('ROLLBACK');
-      throw err;
-    } finally {
-      client.release();
-    }
+    // Push the responses object to BullMQ
+    await responseQueue.add('save_responses', { 
+      attemptId: req.params.id, 
+      responses 
+    });
+
+    res.json({ status: 'success', message: 'Responses queued for saving', queued: Object.keys(responses).length });
   } catch (err) { next(err); }
 });
 
