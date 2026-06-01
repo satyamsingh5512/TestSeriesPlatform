@@ -1,16 +1,20 @@
 const { Worker } = require('bullmq');
+const IORedis = require('ioredis');
 const pool = require('../db/pool');
 
 if (!process.env.REDIS_URL) {
   console.warn('⚠️  REDIS_URL not set. BullMQ response worker is disabled.');
   module.exports = null;
 } else {
-  const connection = {
-    host: process.env.REDIS_HOST || new URL(process.env.REDIS_URL).hostname,
-    port: process.env.REDIS_PORT || new URL(process.env.REDIS_URL).port || 6379,
-    password: new URL(process.env.REDIS_URL).password || undefined,
+  // Pass ioredis instance directly — most reliable method for BullMQ
+  const connection = new IORedis(process.env.REDIS_URL, {
+    maxRetriesPerRequest: null,
+    enableReadyCheck: false,
     tls: process.env.REDIS_URL.startsWith('rediss://') ? {} : undefined,
-  };
+  });
+
+  connection.on('connect', () => console.log('✅ BullMQ ioredis connected to Upstash'));
+  connection.on('error', (err) => console.error('❌ BullMQ Redis error:', err.message));
 
   const worker = new Worker('responses', async (job) => {
     const { attemptId, responses } = job.data;
