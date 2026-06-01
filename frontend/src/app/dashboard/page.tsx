@@ -64,6 +64,13 @@ export default function Dashboard() {
           
           <p className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider px-4 mt-8 mb-3">Intelligence</p>
           <NavItem icon={<BrainCircuit />} label="AI Diagnostics" active={activeTab === 'ai_review'} onClick={() => setActiveTab('ai_review')} />
+          <NavItem icon={<Target />} label="Rank Predictor" active={false} href="/feature/rank_predictor" />
+
+          <p className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider px-4 mt-8 mb-3">Programs</p>
+          <NavItem icon={<Zap />} label="Live Classes" active={false} href="/feature/live_classes" />
+          <NavItem icon={<Star />} label="ExamForge Pass PRO" active={false} href="/feature/pro_pass" />
+          <NavItem icon={<BookOpen />} label="FREE Test Series" active={false} href="/feature/free_tests" />
+          <NavItem icon={<Clock />} label="Previous Papers" active={false} href="/feature/prev_papers" />
         </nav>
 
         <div className="pt-6 border-t border-[var(--border)] space-y-4">
@@ -211,13 +218,26 @@ export default function Dashboard() {
   );
 }
 
-function NavItem({ icon, label, active, onClick }: { icon: any, label: string, active: boolean, onClick: () => void }) {
-  return (
-    <button onClick={onClick} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-200 text-sm font-semibold ${active ? 'bg-[var(--text-highlight)] text-[var(--bg-base)]' : 'text-[var(--text-muted)] hover:bg-[var(--bg-panel-hover)] hover:text-[var(--text-highlight)]'}`}>
+function NavItem({ icon, label, active, onClick, href }: { icon: any, label: string, active: boolean, onClick?: () => void, href?: string }) {
+  const content = (
+    <>
       <div className={`${active ? 'opacity-100' : 'opacity-70'}`}>
         {React.cloneElement(icon, { size: 18, strokeWidth: active ? 2.5 : 2 })}
       </div>
       <span>{label}</span>
+    </>
+  );
+  
+  const className = `w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-200 text-sm font-semibold ${active ? 'bg-[var(--text-highlight)] text-[var(--bg-base)]' : 'text-[var(--text-muted)] hover:bg-[var(--bg-panel-hover)] hover:text-[var(--text-highlight)]'}`;
+
+  if (href) {
+    // Need to import Link at the top, but we can't easily here without breaking rules, so we'll just use router.push if Link is missing or standard a tag
+    return <a href={href} className={className}>{content}</a>;
+  }
+
+  return (
+    <button onClick={onClick} className={className}>
+      {content}
     </button>
   );
 }

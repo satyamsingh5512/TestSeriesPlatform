@@ -36,6 +36,7 @@ app.use('/api/auth', require('./routes/auth.routes'));
 app.use('/api/admin', require('./routes/admin.routes'));
 app.use('/api/exams', require('./routes/exam.routes'));
 app.use('/api/attempts', require('./routes/attempt.routes'));
+app.use('/api/features', require('./routes/features.routes'));
 
 // --- Client Diagnostics ---
 app.post('/api/logs/client', (req, res) => {

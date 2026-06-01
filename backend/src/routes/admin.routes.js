@@ -232,4 +232,50 @@ router.patch('/questions/:id', async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+/**
+ * GET /api/admin/features
+ * Admin list of all features
+ */
+router.get('/features', async (req, res, next) => {
+  try {
+    const { tenant_id } = req.user;
+    const result = await pool.query(
+      `SELECT feature_key, title, description, status, metadata, updated_at 
+       FROM tenant_features 
+       WHERE tenant_id = $1
+       ORDER BY title ASC`,
+      [tenant_id]
+    );
+    res.json({ status: 'success', features: result.rows });
+  } catch (err) { next(err); }
+});
+
+/**
+ * PATCH /api/admin/features/:key
+ * Admin update feature status/content
+ */
+router.patch('/features/:key', async (req, res, next) => {
+  try {
+    const { tenant_id } = req.user;
+    const { key } = req.params;
+    const { title, description, status, metadata } = req.body;
+
+    const result = await pool.query(
+      `UPDATE tenant_features
+       SET title = COALESCE($1, title),
+           description = COALESCE($2, description),
+           status = COALESCE($3, status),
+           metadata = COALESCE($4, metadata),
+           updated_at = NOW()
+       WHERE feature_key = $5 AND tenant_id = $6
+       RETURNING *`,
+      [title, description, status, metadata, key, tenant_id]
+    );
+
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Feature not found' });
+
+    res.json({ status: 'success', feature: result.rows[0] });
+  } catch (err) { next(err); }
+});
+
 module.exports = router;

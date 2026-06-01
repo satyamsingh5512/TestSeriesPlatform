@@ -25,7 +25,10 @@ export default function AdminExamsPage() {
           <h1 className="text-2xl font-semibold text-highlight">Exam Control</h1>
           <p className="text-sm text-muted mt-1">Manage tests and monitor active sessions.</p>
         </div>
-        <Link href="/admin/exams/create" className="btn btn-primary"><Plus className="w-4 h-4"/> New Exam</Link>
+        <div className="flex gap-3">
+          <Link href="/admin/features" className="btn btn-secondary"><Settings2 className="w-4 h-4"/> Modules</Link>
+          <Link href="/admin/exams/create" className="btn btn-primary"><Plus className="w-4 h-4"/> New Exam</Link>
+        </div>
       </header>
 
       {exams.length === 0 ? (
