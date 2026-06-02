@@ -67,12 +67,12 @@ function LandingPageContent() {
       {/* Sub Navbar */}
       <div className="bg-white border-b border-slate-100 hidden md:block">
         <div className="max-w-7xl mx-auto px-4 flex items-center gap-8 text-xs font-bold uppercase tracking-widest h-11 overflow-x-auto text-slate-400">
-          <Link href="/dashboard" className="text-slate-900 hover:text-blue-600 whitespace-nowrap">Exams</Link>
-          <Link href="/feature/live_classes" className="hover:text-slate-900 whitespace-nowrap">Live Classes</Link>
-          <Link href="/feature/free_tests" className="hover:text-slate-900 whitespace-nowrap">FREE Test Series</Link>
-          <Link href="/feature/pro_pass" className="hover:text-slate-900 whitespace-nowrap flex items-center gap-1.5">ExamForge Pass <span className="bg-orange-100 text-orange-600 text-[9px] px-1.5 py-0.5 rounded-md font-black">PRO</span></Link>
-          <Link href="/feature/prev_papers" className="hover:text-slate-900 whitespace-nowrap">Previous Papers</Link>
-          <Link href="/feature/rank_predictor" className="hover:text-slate-900 whitespace-nowrap">Rank Predictor</Link>
+          <a href="#exams" className="text-slate-900 hover:text-blue-600 whitespace-nowrap">Exams</a>
+          <a href="#live-classes" className="hover:text-slate-900 whitespace-nowrap">Live Classes</a>
+          <a href="#free-tests" className="hover:text-slate-900 whitespace-nowrap">FREE Test Series</a>
+          <a href="#pro-pass" className="hover:text-slate-900 whitespace-nowrap flex items-center gap-1.5">ExamForge Pass <span className="bg-orange-100 text-orange-600 text-[9px] px-1.5 py-0.5 rounded-md font-black">PRO</span></a>
+          <a href="#prev-papers" className="hover:text-slate-900 whitespace-nowrap">Previous Papers</a>
+          <a href="#rank-predictor" className="hover:text-slate-900 whitespace-nowrap">Rank Predictor</a>
         </div>
       </div>
 
@@ -156,7 +156,7 @@ function LandingPageContent() {
         </section>
 
         {/* Popular Exams */}
-        <section className="py-20 max-w-7xl mx-auto px-4">
+        <section id="exams" className="py-20 max-w-7xl mx-auto px-4">
           <div className="flex justify-between items-end mb-12">
             <div>
               <h2 className="text-4xl font-black text-slate-900 mb-3 tracking-tight">Popular Exams</h2>
@@ -193,7 +193,7 @@ function LandingPageContent() {
         </section>
 
         {/* Pass Pro Section */}
-        <section className="bg-slate-900 py-24 text-white mt-12 overflow-hidden relative">
+        <section id="pro-pass" className="bg-slate-900 py-24 text-white mt-12 overflow-hidden relative">
           <div className="absolute top-0 right-0 w-1/2 h-full bg-blue-600/10 blur-[120px] rounded-full -mr-1/4" />
           <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 lg:grid-cols-2 gap-20 items-center relative z-10">
             <div>
@@ -287,6 +287,51 @@ function LandingPageContent() {
             </div>
           </div>
         </section>
+        {/* Feature Sections */}
+        <section id="live-classes" className="py-24 max-w-7xl mx-auto px-4 border-t border-slate-100 mt-20">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-black text-slate-900 mb-4 tracking-tight">Live Classes</h2>
+            <p className="text-xl text-slate-500 font-medium">Join interactive daily live sessions with top educators.</p>
+          </div>
+          <div className="panel p-12 text-center bg-slate-50 rounded-3xl border border-slate-100">
+            <p className="text-slate-500 font-bold uppercase tracking-widest text-sm mb-4">Coming Soon</p>
+            <p className="text-slate-400">Our state-of-the-art live classroom experience is launching shortly.</p>
+          </div>
+        </section>
+
+        <section id="free-tests" className="py-24 max-w-7xl mx-auto px-4 border-t border-slate-100">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-black text-slate-900 mb-4 tracking-tight">FREE Test Series</h2>
+            <p className="text-xl text-slate-500 font-medium">Attempt full-length mock tests completely free of cost.</p>
+          </div>
+          <div className="panel p-12 text-center bg-slate-50 rounded-3xl border border-slate-100">
+            <p className="text-slate-500 font-bold uppercase tracking-widest text-sm mb-4">Coming Soon</p>
+            <p className="text-slate-400">The most comprehensive free test bank is almost ready.</p>
+          </div>
+        </section>
+
+        <section id="prev-papers" className="py-24 max-w-7xl mx-auto px-4 border-t border-slate-100">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-black text-slate-900 mb-4 tracking-tight">Previous Papers</h2>
+            <p className="text-xl text-slate-500 font-medium">Practice exactly what appeared in past years.</p>
+          </div>
+          <div className="panel p-12 text-center bg-slate-50 rounded-3xl border border-slate-100">
+            <p className="text-slate-500 font-bold uppercase tracking-widest text-sm mb-4">Coming Soon</p>
+            <p className="text-slate-400">A massive archive of previous year question papers is on its way.</p>
+          </div>
+        </section>
+
+        <section id="rank-predictor" className="py-24 max-w-7xl mx-auto px-4 border-t border-slate-100">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-black text-slate-900 mb-4 tracking-tight">Rank Predictor</h2>
+            <p className="text-xl text-slate-500 font-medium">Know where you stand against thousands of students.</p>
+          </div>
+          <div className="panel p-12 text-center bg-slate-50 rounded-3xl border border-slate-100">
+            <p className="text-slate-500 font-bold uppercase tracking-widest text-sm mb-4">Coming Soon</p>
+            <p className="text-slate-400">Our advanced predictive algorithm is currently training.</p>
+          </div>
+        </section>
+
       </main>
 
       <footer className="bg-slate-900 pt-24 pb-12 border-t border-white/5">

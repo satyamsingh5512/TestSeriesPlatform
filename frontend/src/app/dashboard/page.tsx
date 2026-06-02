@@ -64,13 +64,6 @@ export default function Dashboard() {
           
           <p className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider px-4 mt-8 mb-3">Intelligence</p>
           <NavItem icon={<BrainCircuit />} label="AI Diagnostics" active={activeTab === 'ai_review'} onClick={() => setActiveTab('ai_review')} />
-          <NavItem icon={<Target />} label="Rank Predictor" active={false} href="/feature/rank_predictor" />
-
-          <p className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider px-4 mt-8 mb-3">Programs</p>
-          <NavItem icon={<Zap />} label="Live Classes" active={false} href="/feature/live_classes" />
-          <NavItem icon={<Star />} label="ExamForge Pass PRO" active={false} href="/feature/pro_pass" />
-          <NavItem icon={<BookOpen />} label="FREE Test Series" active={false} href="/feature/free_tests" />
-          <NavItem icon={<Clock />} label="Previous Papers" active={false} href="/feature/prev_papers" />
         </nav>
 
         <div className="pt-6 border-t border-[var(--border)] space-y-4">
