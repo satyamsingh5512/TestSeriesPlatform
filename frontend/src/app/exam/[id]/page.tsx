@@ -22,13 +22,16 @@ export default function ExamPage() {
   const [submitted, setSubmitted] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
   const [proctorAlert, setProctorAlert] = useState<string | null>(null);
+  const [user, setUser] = useState<any>(null);
 
   const attemptIdRef = useRef<string | null>(null);
   const timerRef = useRef<any>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const answersRef = useRef(answers);
+  const submittedRef = useRef(false);
   
   useEffect(() => { answersRef.current = answers; }, [answers]);
+  useEffect(() => { submittedRef.current = submitted; }, [submitted]);
 
   const { stream } = useProctor({ attemptId: attemptIdRef.current, enabled: !loading && !submitted && !isLocked });
 
@@ -40,7 +43,12 @@ export default function ExamPage() {
     async function init() {
       try {
         const api = axios.create({ baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001', headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
-        const { data: examData } = await api.get(`/api/exams/${id}`);
+        const [{ data: examData }, { data: userData }] = await Promise.all([
+          api.get(`/api/exams/${id}`),
+          api.get('/api/auth/me').catch(() => ({ data: { user: null } }))
+        ]);
+        if (userData?.user) setUser(userData.user);
+        
         setTimeLeft(examData.exam.duration_minutes * 60);
         setExamType(examData.exam.exam_type || 'fixed');
 
@@ -68,11 +76,14 @@ export default function ExamPage() {
     const handleTab = () => { setProctorAlert('Violation: Tab Switch. Attempt Locked.'); setIsLocked(true); handleSubmit(true, 'tab_switch'); };
     const onKey = (e: KeyboardEvent) => { if (e.key === 'F12' || (e.altKey && e.key === 'Tab')) e.preventDefault(); };
 
-    document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement) handleExit(); });
-    document.addEventListener('visibilitychange', () => { if (document.hidden) handleTab(); });
+    const onFullscreenChange = () => { if (!document.fullscreenElement && !submittedRef.current) handleExit(); };
+    const onVisibilityChange = () => { if (document.hidden && !submittedRef.current) handleTab(); };
+
+    document.addEventListener('fullscreenchange', onFullscreenChange);
+    document.addEventListener('visibilitychange', onVisibilityChange);
     document.addEventListener('keydown', onKey);
 
-    return () => { document.removeEventListener('fullscreenchange', handleExit); document.removeEventListener('visibilitychange', handleTab); document.removeEventListener('keydown', onKey); };
+    return () => { document.removeEventListener('fullscreenchange', onFullscreenChange); document.removeEventListener('visibilitychange', onVisibilityChange); document.removeEventListener('keydown', onKey); };
   }, [permissionsGranted, loading, submitted, isLocked]);
 
   useEffect(() => {
@@ -84,8 +95,12 @@ export default function ExamPage() {
   const handleSubmit = async (auto = false, reason: string | null = null) => {
     if (submitted) return;
     if (!auto && !confirm('Submit exam?')) return;
+    submittedRef.current = true;
     setSubmitted(true); setIsLocked(true);
     clearInterval(timerRef.current);
+    if (document.fullscreenElement) {
+      try { await document.exitFullscreen(); } catch (e) {}
+    }
     try {
       const api = axios.create({ baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001', headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
       const payload: Record<string, any> = {};
@@ -135,8 +150,17 @@ export default function ExamPage() {
   const tStr = `${h > 0 ? h+':' : ''}${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
 
   return (
-    <div className="flex flex-col min-h-screen animate-fadeIn select-none">
-      <header className="flex items-center justify-between px-6 py-4 border-b border-themeBorder bg-base z-10">
+    <div className="flex flex-col min-h-screen animate-fadeIn select-none relative">
+      {user && (
+        <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden flex flex-wrap justify-around items-center opacity-[0.03] select-none">
+          {Array.from({ length: 30 }).map((_, i) => (
+            <div key={i} className="transform -rotate-45 text-xl font-bold whitespace-nowrap p-8 text-primary">
+              {user.name} • {user.email}
+            </div>
+          ))}
+        </div>
+      )}
+      <header className="flex items-center justify-between px-6 py-4 border-b border-themeBorder bg-base z-10 relative">
         <div className="flex items-center gap-2"><ShieldCheck className="w-4 h-4 text-accent"/><span className="font-semibold text-highlight">ExamForge</span></div>
         <div className={`font-mono text-lg font-medium ${timeLeft < 300 ? 'text-error animate-pulseText' : 'text-primary'}`}>{tStr}</div>
         <div className="flex items-center gap-4"><span className="status-tag status-active hidden sm:inline-flex"><span className="w-1.5 h-1.5 rounded-full bg-base animate-pulse"/> Secured</span><button onClick={() => handleSubmit(false)} className="btn btn-primary text-xs">Finish</button></div>
