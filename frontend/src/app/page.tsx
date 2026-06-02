@@ -67,12 +67,12 @@ function LandingPageContent() {
       {/* Sub Navbar */}
       <div className="bg-white border-b border-slate-100 hidden md:block">
         <div className="max-w-7xl mx-auto px-4 flex items-center gap-8 text-xs font-bold uppercase tracking-widest h-11 overflow-x-auto text-slate-400">
-          <Link href="#" className="text-slate-900 hover:text-blue-600 whitespace-nowrap">Exams</Link>
-          <Link href="#" className="hover:text-slate-900 whitespace-nowrap">Live Classes</Link>
-          <Link href="#" className="hover:text-slate-900 whitespace-nowrap">FREE Test Series</Link>
-          <Link href="#" className="hover:text-slate-900 whitespace-nowrap flex items-center gap-1.5">ExamForge Pass <span className="bg-orange-100 text-orange-600 text-[9px] px-1.5 py-0.5 rounded-md font-black">PRO</span></Link>
-          <Link href="#" className="hover:text-slate-900 whitespace-nowrap">Previous Papers</Link>
-          <Link href="#" className="hover:text-slate-900 whitespace-nowrap">Rank Predictor</Link>
+          <Link href="/dashboard" className="text-slate-900 hover:text-blue-600 whitespace-nowrap">Exams</Link>
+          <Link href="/feature/live_classes" className="hover:text-slate-900 whitespace-nowrap">Live Classes</Link>
+          <Link href="/feature/free_tests" className="hover:text-slate-900 whitespace-nowrap">FREE Test Series</Link>
+          <Link href="/feature/pro_pass" className="hover:text-slate-900 whitespace-nowrap flex items-center gap-1.5">ExamForge Pass <span className="bg-orange-100 text-orange-600 text-[9px] px-1.5 py-0.5 rounded-md font-black">PRO</span></Link>
+          <Link href="/feature/prev_papers" className="hover:text-slate-900 whitespace-nowrap">Previous Papers</Link>
+          <Link href="/feature/rank_predictor" className="hover:text-slate-900 whitespace-nowrap">Rank Predictor</Link>
         </div>
       </div>
 
