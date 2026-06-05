@@ -4,6 +4,7 @@ import { useParams, useRouter } from 'next/navigation';
 import axios from 'axios';
 import { useProctor } from '@/hooks/useProctor';
 import { ShieldCheck, Camera, MapPin, Clipboard, ArrowRight, AlertTriangle, Clock } from 'lucide-react';
+import { ConsentModal } from '@/components/auth/ConsentModal';
 
 export default function ExamPage() {
   const { id } = useParams<{ id: string }>();
@@ -118,7 +119,18 @@ export default function ExamPage() {
   };
 
   if (loading && !initError) return <div className="min-h-screen flex items-center justify-center font-mono animate-pulseText tracking-widest text-muted">Preparing Workspace...</div>;
-  if (initError) return <div className="min-h-screen flex items-center justify-center p-6"><div className="panel max-w-md w-full p-8 text-center"><p className="text-red-500 font-semibold mb-4">{initError}</p><button onClick={() => router.push('/dashboard')} className="btn btn-primary">Back to Dashboard</button></div></div>;
+  if (initError) {
+    if (initError === 'CONSENT_REQUIRED') {
+      return (
+        <div className="min-h-screen bg-[var(--bg-base)] flex items-center justify-center">
+          <ConsentModal isOpen={true} onClose={() => router.push('/dashboard')} />
+        </div>
+      );
+    }
+    return (
+      <div className="min-h-screen flex items-center justify-center p-6"><div className="panel max-w-md w-full p-8 text-center"><p className="text-red-500 font-semibold mb-4">{initError}</p><button onClick={() => router.push('/dashboard')} className="btn btn-primary">Back to Dashboard</button></div></div>
+    );
+  }
 
   if (!permissionsGranted) return (
     <div className="min-h-screen flex items-center justify-center p-6 animate-fadeIn">
