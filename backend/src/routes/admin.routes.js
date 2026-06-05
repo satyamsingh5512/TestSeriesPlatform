@@ -302,17 +302,17 @@ router.post('/ocr/extract', upload.single('image'), async (req, res, next) => {
     const ocrApiKey = process.env.OCR_API_KEY || 'helloworld'; // 'helloworld' is the default free key
     
     const response = await axios.post('https://api.ocr.space/parse/image', form, {
-      headers: { 
+      headers: {
         ...form.getHeaders(),
         'apikey': ocrApiKey
       }
     });
 
     if (response.data && response.data.ParsedResults && response.data.ParsedResults.length > 0) {
-      const text = response.data.ParsedResults[0].ParsedText;
+      // Join text from all pages if it's a multi-page document/PDF
+      const text = response.data.ParsedResults.map(r => r.ParsedText).join('\n\n');
       res.json({ status: 'success', data: { success: true, text: text.trim(), filename: req.file.originalname } });
-    } else {
-       res.status(400).json({ error: 'Failed to extract text', details: response.data });
+    } else {       res.status(400).json({ error: 'Failed to extract text', details: response.data });
     }
   } catch (err) {
     if (err.response) {

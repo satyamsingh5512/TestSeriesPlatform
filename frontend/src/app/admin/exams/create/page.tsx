@@ -113,7 +113,7 @@ export default function CreateExamPage() {
                           type="file" 
                           id={`ocr-input-${si}-${qi}`}
                           className="hidden" 
-                          accept="image/*"
+                          accept="image/*,application/pdf"
                           onChange={(e) => {
                             const file = e.target.files?.[0];
                             if (file) handleOCR(si, qi, file);
