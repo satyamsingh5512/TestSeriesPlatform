@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { CommandPalette } from '@/components/CommandPalette';
+import { TenantProvider } from '@/components/TenantProvider';
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -18,8 +19,10 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             }
           } catch (e) {}
         `}} />
-        {children}
-        <CommandPalette />
+        <TenantProvider>
+          {children}
+          <CommandPalette />
+        </TenantProvider>
       </body>
     </html>
   );
