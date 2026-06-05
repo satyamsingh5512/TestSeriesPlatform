@@ -69,6 +69,28 @@ router.post('/:id/start', async (req, res, next) => {
     const { tenant_id, id: user_id } = req.user;
     const { id: exam_id } = req.params;
 
+    // --- DPDP Act 2023 Consent Check ---
+    const userRes = await pool.query('SELECT dob, consent_verified FROM users WHERE id = $1', [user_id]);
+    const user = userRes.rows[0];
+    
+    let requiresConsent = false;
+    if (!user.dob) {
+      requiresConsent = true; // Must provide DOB and verify
+    } else {
+      const ageDate = new Date(Date.now() - new Date(user.dob).getTime());
+      const age = Math.abs(ageDate.getUTCFullYear() - 1970);
+      if (age < 18 && !user.consent_verified) requiresConsent = true;
+      if (age >= 18 && !user.consent_verified) requiresConsent = true; // If cron revoked it on 18th birthday
+    }
+
+    if (requiresConsent) {
+      return res.status(403).json({ 
+        error: 'CONSENT_REQUIRED', 
+        message: 'DPDP Act Compliance: Parental or adult consent is required before accessing exams.'
+      });
+    }
+    // --- End Consent Check ---
+
     const exam = await pool.query(
       'SELECT * FROM exams WHERE id = $1 AND tenant_id = $2 AND status = \'published\'', 
       [exam_id, tenant_id]
