@@ -1,0 +1,80 @@
+services:
+  # ---------------------------------------------------------
+  # 1. PostgreSQL Database
+  # ---------------------------------------------------------
+  - type: psql
+    name: edtech-db
+    plan: free
+    postgresMajorVersion: 16
+
+  # ---------------------------------------------------------
+  # 2. Redis Cache & Queue
+  # ---------------------------------------------------------
+  - type: redis
+    name: edtech-redis
+    plan: free
+
+  # ---------------------------------------------------------
+  # 3. AI Service (Python FastAPI)
+  # ---------------------------------------------------------
+  - type: web
+    name: examforge-ai
+    env: python
+    rootDir: ai-service
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    plan: free
+
+  # ---------------------------------------------------------
+  # 4. Backend API (Node.js/Docker)
+  # ---------------------------------------------------------
+  - type: web
+    name: examforge-backend
+    env: docker
+    rootDir: backend
+    # NOTE: 'npm run migrate' drops existing tables in schema.sql. 
+    # Use carefully in production.
+    plan: free
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: edtech-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: edtech-redis
+          property: connectionString
+      - key: AI_SERVICE_URL
+        fromService:
+          type: web
+          name: examforge-ai
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: JWT_SECRET
+        generateValue: true
+      - key: OCR_API_KEY
+        value: helloworld
+      - key: FRONTEND_URL
+        fromService:
+          type: web
+          name: examforge-frontend
+          envVarKey: RENDER_EXTERNAL_URL
+
+  # ---------------------------------------------------------
+  # 5. Frontend (Next.js)
+  # ---------------------------------------------------------
+  - type: web
+    name: examforge-frontend
+    env: node
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    plan: free
+    envVars:
+      - key: NEXT_PUBLIC_API_URL
+        fromService:
+          type: web
+          name: examforge-backend
+          envVarKey: RENDER_EXTERNAL_URL
