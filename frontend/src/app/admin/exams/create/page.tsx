@@ -13,6 +13,30 @@ export default function CreateExamPage() {
 
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
+  const [ocrLoading, setOcrLoading] = useState<string | null>(null); // sectionIndex-questionIndex
+
+  const handleOCR = async (sectionIndex: number, questionIndex: number, file: File) => {
+    const key = `${sectionIndex}-${questionIndex}`;
+    setOcrLoading(key);
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+      
+      const res = await apiClient().post('/api/admin/ocr/extract', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+
+      if (res.data?.data?.text) {
+        const n = [...sections];
+        n[sectionIndex].questions[questionIndex].text = res.data.data.text;
+        setSections(n);
+      }
+    } catch (err: any) {
+      alert(err.response?.data?.error || 'OCR failed');
+    } finally {
+      setOcrLoading(null);
+    }
+  };
 
   const save = async () => {
     setSaveError('');
@@ -72,7 +96,32 @@ export default function CreateExamPage() {
               <div className="space-y-4">
                 {s.questions.map((q: any, qi: number) => (
                   <div key={qi} className="p-4 border border-themeBorder rounded bg-panel-hover">
-                    <div className="flex gap-3 mb-3"><select value={q.qtype} onChange={e => { const n=[...sections]; n[si].questions[qi].qtype=e.target.value; setSections(n); }} className="w-auto py-1 text-xs"><option value="MCQ">MCQ</option><option value="NAT">NAT</option></select></div>
+                    <div className="flex justify-between items-start mb-3">
+                      <div className="flex gap-3">
+                        <select value={q.qtype} onChange={e => { const n=[...sections]; n[si].questions[qi].qtype=e.target.value; setSections(n); }} className="w-auto py-1 text-xs"><option value="MCQ">MCQ</option><option value="NAT">NAT</option></select>
+                      </div>
+                      
+                      <div className="relative">
+                        <button 
+                          className="text-[10px] font-bold bg-accent/10 text-accent px-2 py-1 rounded hover:bg-accent/20 flex items-center gap-1"
+                          onClick={() => document.getElementById(`ocr-input-${si}-${qi}`)?.click()}
+                          disabled={ocrLoading === `${si}-${qi}`}
+                        >
+                          {ocrLoading === `${si}-${qi}` ? 'Processing...' : '📷 OCR Extract'}
+                        </button>
+                        <input 
+                          type="file" 
+                          id={`ocr-input-${si}-${qi}`}
+                          className="hidden" 
+                          accept="image/*"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) handleOCR(si, qi, file);
+                          }}
+                        />
+                      </div>
+                    </div>
+
                     <textarea placeholder="Question text" value={q.text} onChange={e => { const n=[...sections]; n[si].questions[qi].text=e.target.value; setSections(n); }} className="h-20 mb-3" />
                     {q.qtype === 'MCQ' && (
                       <div className="grid grid-cols-2 gap-2 mb-3">

@@ -4,6 +4,7 @@ from pydantic import BaseModel
 from typing import List, Optional
 import os
 from irt import router as irt_router
+from ocr import router as ocr_router
 
 app = FastAPI(title="EdTech AI Service", version="1.0.0")
 
@@ -15,6 +16,7 @@ app.add_middleware(
 )
 
 app.include_router(irt_router)
+app.include_router(ocr_router, prefix="/ocr")
 
 class QuestionAnalysis(BaseModel):
     question_id: str
