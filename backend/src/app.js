@@ -6,8 +6,12 @@ const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 const errorHandler = require('./middleware/error.middleware');
 
-// Start BullMQ workers
+// Start Background Jobs & Workers
 require('./workers/response.worker');
+const { startConsentJob } = require('./jobs/consent.job');
+const { startPurgeJob } = require('./jobs/purge.job');
+startConsentJob();
+startPurgeJob();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -32,8 +36,11 @@ app.use(express.json());
 app.use(morgan('dev'));
 
 // --- Routes ---
+app.use('/api/tenant', require('./routes/tenant.routes'));
 app.use('/api/auth', require('./routes/auth.routes'));
+app.use('/api/consent', require('./routes/consent.routes'));
 app.use('/api/admin', require('./routes/admin.routes'));
+app.use('/api/superadmin', require('./routes/superadmin.routes'));
 app.use('/api/exams', require('./routes/exam.routes'));
 app.use('/api/attempts', require('./routes/attempt.routes'));
 app.use('/api/features', require('./routes/features.routes'));
