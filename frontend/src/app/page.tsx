@@ -5,11 +5,16 @@ import Link from 'next/link';
 import { Search, ChevronRight, PlayCircle, BookOpen, ArrowRight, Sparkles, LayoutDashboard, BrainCircuit, Globe, Zap, X, GraduationCap, Clock, Award, CheckCircle2, TrendingUp, BarChart3, Target } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { LoginModal, RegisterModal, ForgotPasswordModal, ResetPasswordModal } from '@/components/auth/AuthModals';
+import { useTenant } from '@/components/TenantProvider';
 
 function LandingPageContent() {
   const [modal, setModal] = useState<'login' | 'register' | 'forgot-password' | 'reset-password' | null>(null);
   const [resetEmail, setResetEmail] = useState('');
   const searchParams = useSearchParams();
+  const { tenant } = useTenant();
+
+  const brandName = tenant?.name || "ExamForge";
+  const brandLogo = tenant?.logo_url || null;
 
   useEffect(() => {
     const auth = searchParams.get('auth');
@@ -27,7 +32,7 @@ function LandingPageContent() {
       <ResetPasswordModal isOpen={modal === 'reset-password'} onClose={() => setModal(null)} onSwitchToLogin={() => setModal('login')} initialEmail={resetEmail} />
 
       {/* Top Banner Marquee */}
-      <div className="bg-slate-900 text-white py-2.5 overflow-hidden whitespace-nowrap sticky top-0 z-[60] h-10 flex">
+      <div className="bg-slate-900 text-white py-2.5 overflow-hidden whitespace-nowrap sticky top-0 z-[60] h-10 flex" style={{ backgroundColor: 'var(--primary, #0f172a)' }}>
         <div className="flex animate-marquee items-center w-max">
           {[...Array(10)].map((_, i) => (
             <div key={i} className="flex items-center gap-4 text-xs font-black uppercase tracking-[0.2em] px-6">
@@ -47,10 +52,14 @@ function LandingPageContent() {
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-8">
             <div className="flex items-center gap-2 group cursor-pointer">
-              <div className="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
-                <BookOpen className="w-5 h-5 text-white" />
-              </div>
-              <span className="text-2xl font-bold text-slate-800 tracking-tight">ExamForge</span>
+              {brandLogo ? (
+                <img src={brandLogo} alt={brandName} className="h-8 object-contain" />
+              ) : (
+                <div className="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform" style={{ backgroundColor: 'var(--primary, #0f172a)' }}>
+                  <BookOpen className="w-5 h-5 text-white" />
+                </div>
+              )}
+              <span className="text-2xl font-bold text-slate-800 tracking-tight" style={{ color: 'var(--primary, #1e293b)' }}>{brandName}</span>
             </div>
             <div className="hidden md:flex relative w-96">
               <input type="text" placeholder="Search for Exams..." className="w-full pl-10 pr-4 py-2.5 bg-slate-100 border-transparent rounded-2xl text-sm focus:ring-2 focus:ring-slate-900/5 focus:bg-white focus:border-slate-200 transition-all outline-none font-medium" />
@@ -59,7 +68,7 @@ function LandingPageContent() {
           </div>
           <div className="flex items-center gap-4">
             <button onClick={() => openModal('login')} className="text-slate-600 hover:text-slate-900 font-bold text-sm px-4 py-2 transition-all active:scale-95">Log in</button>
-            <button onClick={() => openModal('register')} className="bg-slate-900 hover:bg-black text-white font-bold text-sm px-6 py-2.5 rounded-2xl transition-all shadow-xl shadow-slate-900/10 active:scale-95">Sign up</button>
+            <button onClick={() => openModal('register')} className="bg-slate-900 hover:bg-black text-white font-bold text-sm px-6 py-2.5 rounded-2xl transition-all shadow-xl shadow-slate-900/10 active:scale-95" style={{ backgroundColor: 'var(--primary, #0f172a)' }}>Sign up</button>
           </div>
         </div>
       </nav>
@@ -70,7 +79,7 @@ function LandingPageContent() {
           <a href="#exams" className="text-slate-900 hover:text-blue-600 whitespace-nowrap">Exams</a>
           <a href="#live-classes" className="hover:text-slate-900 whitespace-nowrap">Live Classes</a>
           <a href="#free-tests" className="hover:text-slate-900 whitespace-nowrap">FREE Test Series</a>
-          <a href="#pro-pass" className="hover:text-slate-900 whitespace-nowrap flex items-center gap-1.5">ExamForge Pass <span className="bg-orange-100 text-orange-600 text-[9px] px-1.5 py-0.5 rounded-md font-black">PRO</span></a>
+          <a href="#pro-pass" className="hover:text-slate-900 whitespace-nowrap flex items-center gap-1.5">{brandName} Pass <span className="bg-orange-100 text-orange-600 text-[9px] px-1.5 py-0.5 rounded-md font-black">PRO</span></a>
           <a href="#prev-papers" className="hover:text-slate-900 whitespace-nowrap">Previous Papers</a>
           <a href="#rank-predictor" className="hover:text-slate-900 whitespace-nowrap">Rank Predictor</a>
         </div>
@@ -91,7 +100,7 @@ function LandingPageContent() {
               
               <h1 className="text-4xl lg:text-7xl font-black text-slate-900 leading-[1.05] mb-8 tracking-tighter">
                 One Stop for <br/>
-                <span className="text-blue-600">Perfect Scores</span>
+                <span className="text-blue-600" style={{ color: 'var(--primary, #2563eb)' }}>Perfect Scores</span>
               </h1>
               
               <p className="text-xl text-slate-500 mb-10 max-w-lg font-medium leading-relaxed">
@@ -99,7 +108,7 @@ function LandingPageContent() {
               </p>
               
               <div className="flex flex-col sm:flex-row gap-4 mb-12">
-                <button onClick={() => openModal('register')} className="bg-orange-500 hover:bg-orange-600 text-white font-black text-lg px-10 py-5 rounded-[24px] text-center shadow-2xl shadow-orange-500/20 transition-all flex items-center justify-center gap-3 active:scale-95">
+                <button onClick={() => openModal('register')} className="bg-orange-500 hover:bg-orange-600 text-white font-black text-lg px-10 py-5 rounded-[24px] text-center shadow-2xl shadow-orange-500/20 transition-all flex items-center justify-center gap-3 active:scale-95" style={{ backgroundColor: 'var(--primary, #f97316)' }}>
                   Start Now <ArrowRight className="w-6 h-6" />
                 </button>
                 <button className="bg-white border-2 border-slate-200 hover:border-slate-300 text-slate-900 font-bold text-lg px-10 py-5 rounded-[24px] transition-all active:scale-95">
@@ -147,7 +156,7 @@ function LandingPageContent() {
                     <div className="text-xs text-slate-400 mt-1 font-medium tracking-tight">UPSC, State PSC</div>
                   </button>
                 </div>
-                <button onClick={() => openModal('login')} className="w-full mt-8 bg-slate-900 text-white font-black py-5 rounded-3xl hover:bg-black transition-all shadow-xl shadow-slate-900/10 active:scale-95">
+                <button onClick={() => openModal('login')} className="w-full mt-8 bg-slate-900 text-white font-black py-5 rounded-3xl hover:bg-black transition-all shadow-xl shadow-slate-900/10 active:scale-95" style={{ backgroundColor: 'var(--primary, #0f172a)' }}>
                   Discover All Exams
                 </button>
               </div>
@@ -162,7 +171,7 @@ function LandingPageContent() {
               <h2 className="text-4xl font-black text-slate-900 mb-3 tracking-tight">Popular Exams</h2>
               <p className="text-slate-500 font-medium">Updated to the latest 2026 patterns.</p>
             </div>
-            <button onClick={() => openModal('login')} className="hidden sm:flex text-blue-600 font-bold items-center hover:underline">
+            <button onClick={() => openModal('login')} className="hidden sm:flex text-blue-600 font-bold items-center hover:underline" style={{ color: 'var(--primary, #2563eb)' }}>
               View All <ChevronRight className="w-5 h-5 ml-1" />
             </button>
           </div>
@@ -184,7 +193,7 @@ function LandingPageContent() {
                 </div>
                 <h3 className="font-bold text-slate-800 text-xl mb-1.5">{e.title}</h3>
                 <p className="text-sm text-slate-400 font-bold mb-6">{e.count} Exams</p>
-                <div className="text-blue-600 text-sm font-black opacity-0 group-hover:opacity-100 transition-opacity flex items-center">
+                <div className="text-blue-600 text-sm font-black opacity-0 group-hover:opacity-100 transition-opacity flex items-center" style={{ color: 'var(--primary, #2563eb)' }}>
                   Explore <ChevronRight className="w-4 h-4 ml-1" />
                 </div>
               </button>
@@ -193,17 +202,17 @@ function LandingPageContent() {
         </section>
 
         {/* Pass Pro Section */}
-        <section id="pro-pass" className="bg-slate-900 py-24 text-white mt-12 overflow-hidden relative">
-          <div className="absolute top-0 right-0 w-1/2 h-full bg-blue-600/10 blur-[120px] rounded-full -mr-1/4" />
+        <section id="pro-pass" className="bg-slate-900 py-24 text-white mt-12 overflow-hidden relative" style={{ backgroundColor: 'var(--primary, #0f172a)' }}>
+          <div className="absolute top-0 right-0 w-1/2 h-full bg-white/10 blur-[120px] rounded-full -mr-1/4" />
           <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 lg:grid-cols-2 gap-20 items-center relative z-10">
             <div>
               <div className="inline-block bg-white/10 backdrop-blur-md text-white border border-white/20 px-5 py-2 rounded-full font-black text-xs mb-8 uppercase tracking-widest">
-                ExamForge Pass Pro
+                {brandName} Pass Pro
               </div>
               <h2 className="text-5xl font-black mb-8 leading-[1.1] tracking-tighter">
-                Access <span className="text-blue-400">700+ Exam</span> Series <br/> with One Pass
+                Access <span className="text-blue-400" style={{ color: 'var(--primary-light, #60a5fa)' }}>700+ Exam</span> Series <br/> with One Pass
               </h2>
-              <p className="text-slate-400 text-xl mb-12 font-medium leading-relaxed">
+              <p className="text-slate-200 text-xl mb-12 font-medium leading-relaxed">
                 Unlimited Mock Tests, Previous Year Papers, and adaptive practice sets on India's most structured test platform.
               </p>
               <ul className="space-y-6 mb-12">
@@ -222,7 +231,7 @@ function LandingPageContent() {
             </div>
             
             <div className="relative">
-              <div className="absolute inset-0 bg-blue-500/20 blur-[100px] rounded-full" />
+              <div className="absolute inset-0 bg-white/20 blur-[100px] rounded-full" />
               <div className="relative bg-slate-800/50 backdrop-blur-2xl border border-white/10 p-10 rounded-[48px] shadow-2xl">
                 <div className="flex justify-between items-center border-b border-white/5 pb-8 mb-8">
                   <div>
@@ -231,27 +240,27 @@ function LandingPageContent() {
                   </div>
                   <div className="text-right">
                     <div className="text-sm text-slate-500 line-through font-bold">₹699</div>
-                    <div className="text-4xl font-black text-blue-400 mt-1">₹399</div>
+                    <div className="text-4xl font-black text-blue-400 mt-1" style={{ color: 'var(--primary-light, #60a5fa)' }}>₹399</div>
                   </div>
                 </div>
                 
                 <div className="space-y-5">
                   <div className="bg-white/5 border border-white/5 p-5 rounded-3xl flex items-center gap-5">
-                    <div className="w-14 h-14 bg-blue-500/10 rounded-2xl flex items-center justify-center">
-                      <Target className="w-7 h-7 text-blue-400" />
+                    <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center">
+                      <Target className="w-7 h-7 text-white" />
                     </div>
                     <div>
                       <div className="font-bold text-white text-lg">75,000+ Tests</div>
-                      <div className="text-sm text-slate-500 font-medium">Latest 2026 pattern</div>
+                      <div className="text-sm text-slate-300 font-medium">Latest 2026 pattern</div>
                     </div>
                   </div>
                   <div className="bg-white/5 border border-white/5 p-5 rounded-3xl flex items-center gap-5">
-                    <div className="w-14 h-14 bg-purple-500/10 rounded-2xl flex items-center justify-center">
-                      <PlayCircle className="w-7 h-7 text-purple-400" />
+                    <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center">
+                      <PlayCircle className="w-7 h-7 text-white" />
                     </div>
                     <div>
                       <div className="font-bold text-white text-lg">Video Solutions</div>
-                      <div className="text-sm text-slate-500 font-medium">Expert walkthroughs</div>
+                      <div className="text-sm text-slate-300 font-medium">Expert walkthroughs</div>
                     </div>
                   </div>
                 </div>
@@ -262,10 +271,10 @@ function LandingPageContent() {
 
         {/* Why Us */}
         <section className="py-24 max-w-7xl mx-auto px-4 text-center">
-          <h2 className="text-4xl font-black text-slate-900 mb-20 tracking-tight">Why ExamForge?</h2>
+          <h2 className="text-4xl font-black text-slate-900 mb-20 tracking-tight">Why {brandName}?</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-16">
             <div className="flex flex-col items-center group">
-              <div className="w-24 h-24 bg-blue-50 text-blue-600 rounded-[32px] flex items-center justify-center mb-8 group-hover:rotate-6 group-hover:scale-110 transition-all duration-500">
+              <div className="w-24 h-24 bg-blue-50 text-blue-600 rounded-[32px] flex items-center justify-center mb-8 group-hover:rotate-6 group-hover:scale-110 transition-all duration-500" style={{ color: 'var(--primary, #2563eb)', backgroundColor: 'var(--primary-light, #eff6ff)' }}>
                 <GraduationCap className="w-10 h-10" />
               </div>
               <h3 className="text-2xl font-bold text-slate-900 mb-4 tracking-tight">Learn from Best</h3>
@@ -287,6 +296,7 @@ function LandingPageContent() {
             </div>
           </div>
         </section>
+
         {/* Feature Sections */}
         <section id="live-classes" className="py-24 max-w-7xl mx-auto px-4 border-t border-slate-100 mt-20">
           <div className="text-center mb-16">
@@ -334,50 +344,54 @@ function LandingPageContent() {
 
       </main>
 
-      <footer className="bg-slate-900 pt-24 pb-12 border-t border-white/5">
+      <footer className="bg-slate-900 pt-24 pb-12 border-t border-white/5" style={{ backgroundColor: 'var(--primary, #0f172a)' }}>
         <div className="max-w-7xl mx-auto px-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-12 mb-20">
             <div>
               <div className="flex items-center gap-3 mb-8">
-                <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
-                  <BookOpen className="w-5 h-5 text-slate-900" />
-                </div>
-                <span className="text-2xl font-bold text-white tracking-tight">ExamForge</span>
+                {brandLogo ? (
+                  <img src={brandLogo} alt={brandName} className="h-8 object-contain bg-white rounded p-1" />
+                ) : (
+                  <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
+                    <BookOpen className="w-5 h-5 text-slate-900" style={{ color: 'var(--primary, #0f172a)' }} />
+                  </div>
+                )}
+                <span className="text-2xl font-bold text-white tracking-tight">{brandName}</span>
               </div>
-              <p className="text-slate-500 font-medium text-sm leading-relaxed">
+              <p className="text-slate-400 font-medium text-sm leading-relaxed">
                 India's premier destination for competitive exam preparation. Enabling millions of students to achieve their dreams.
               </p>
             </div>
             <div>
               <h4 className="text-white font-black uppercase tracking-widest text-xs mb-8">Exams</h4>
               <ul className="space-y-4 text-slate-400 text-sm font-bold">
-                <li><button onClick={() => openModal('login')} className="hover:text-blue-400 transition">SSC CGL</button></li>
-                <li><button onClick={() => openModal('login')} className="hover:text-blue-400 transition">SBI PO</button></li>
-                <li><button onClick={() => openModal('login')} className="hover:text-blue-400 transition">JEE Advanced</button></li>
-                <li><button onClick={() => openModal('login')} className="hover:text-blue-400 transition">NEET UG</button></li>
-                <li><button onClick={() => openModal('login')} className="hover:text-blue-400 transition">UPSC Civil</button></li>
+                <li><button onClick={() => openModal('login')} className="hover:text-white transition">SSC CGL</button></li>
+                <li><button onClick={() => openModal('login')} className="hover:text-white transition">SBI PO</button></li>
+                <li><button onClick={() => openModal('login')} className="hover:text-white transition">JEE Advanced</button></li>
+                <li><button onClick={() => openModal('login')} className="hover:text-white transition">NEET UG</button></li>
+                <li><button onClick={() => openModal('login')} className="hover:text-white transition">UPSC Civil</button></li>
               </ul>
             </div>
             <div>
               <h4 className="text-white font-black uppercase tracking-widest text-xs mb-8">Company</h4>
               <ul className="space-y-4 text-slate-400 text-sm font-bold">
-                <li><Link href="#" className="hover:text-blue-600 transition">About Us</Link></li>
-                <li><Link href="#" className="hover:text-blue-600 transition">Careers</Link></li>
-                <li><Link href="#" className="hover:text-blue-600 transition">Privacy</Link></li>
-                <li><Link href="#" className="hover:text-blue-600 transition">Terms</Link></li>
+                <li><Link href="#" className="hover:text-white transition">About Us</Link></li>
+                <li><Link href="#" className="hover:text-white transition">Careers</Link></li>
+                <li><Link href="#" className="hover:text-white transition">Privacy</Link></li>
+                <li><Link href="#" className="hover:text-white transition">Terms</Link></li>
               </ul>
             </div>
             <div>
               <h4 className="text-white font-black uppercase tracking-widest text-xs mb-8">Support</h4>
               <ul className="space-y-4 text-slate-400 text-sm font-bold">
-                <li>support@examforge.com</li>
+                <li>support@domain.com</li>
                 <li>1800-123-4567</li>
                 <li className="pt-4"><button className="bg-white text-slate-900 px-6 py-3 rounded-2xl font-black text-xs transition active:scale-95">Contact Us</button></li>
               </ul>
             </div>
           </div>
-          <div className="border-t border-white/5 pt-12 text-center text-slate-600 text-xs font-bold uppercase tracking-widest">
-            © {new Date().getFullYear()} ExamForge EduTech. All rights reserved.
+          <div className="border-t border-white/5 pt-12 text-center text-slate-500 text-xs font-bold uppercase tracking-widest">
+            © {new Date().getFullYear()} {brandName} EduTech. All rights reserved.
           </div>
         </div>
       </footer>
