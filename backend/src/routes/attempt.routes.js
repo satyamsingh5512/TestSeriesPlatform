@@ -346,6 +346,12 @@ router.post('/:id/submit', async (req, res, next) => {
         [total_score, timeTaken, req.params.id]
       );
 
+      // DPDP Act: Set expiration for any violations recorded during this attempt
+      await client.query(
+        `UPDATE violations SET purge_after = NOW() + INTERVAL '7 days' WHERE attempt_id = $1`,
+        [req.params.id]
+      );
+
       // PERCENTILE CALCULATION
       const allScoresRes = await client.query(
         `SELECT total_score FROM attempts WHERE exam_id = $1 AND status = 'submitted' AND tenant_id = $2`,
