@@ -2,7 +2,8 @@ const puppeteer = require('puppeteer');
 
 async function generateAttemptReport(data) {
   const browser = await puppeteer.launch({
-    args: ['--no-sandbox', '--disable-setuid-sandbox']
+    args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || puppeteer.executablePath(),
   });
   const page = await browser.newPage();
 
