@@ -3,7 +3,11 @@ const pool = require('../db/pool');
 const redis = require('../db/redis');
 const authMiddleware = require('../middleware/auth.middleware');
 const roleMiddleware = require('../middleware/role.middleware');
+const axios = require('axios');
+const FormData = require('form-data');
+const multer = require('multer');
 
+const upload = multer({ storage: multer.memoryStorage() });
 const router = express.Router();
 
 // Apply auth + admin check to all routes here
