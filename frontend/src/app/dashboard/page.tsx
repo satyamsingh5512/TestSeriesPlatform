@@ -1,16 +1,19 @@
 'use client';
-import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useEffect, useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import axios from 'axios';
 import { BookOpen, Clock, Award, BarChart3, Zap, ChevronRight, LogOut, BrainCircuit, Target, Sun, Star } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTenant } from '@/components/TenantProvider';
 
 // ... (Interface definitions remain the same)
 interface Attempt { id: string; exam_id: string; exam_title: string; status: 'in_progress' | 'submitted' | 'flagged'; total_score: number; percentile: number; started_at: string; }
 interface Exam { id: string; title: string; duration_minutes: number; total_marks: number; exam_type: 'fixed' | 'adaptive'; }
 
-export default function Dashboard() {
+function DashboardContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const { tenant } = useTenant();
   const [user, setUser] = useState<any>(null);
   const [exams, setExams] = useState<Exam[]>([]);
   const [attempts, setAttempts] = useState<Attempt[]>([]);
@@ -18,16 +21,35 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('dashboard');
 
+  const brandName = tenant?.name || "ExamForge";
+  const brandLogo = tenant?.logo_url || null;
+
   useEffect(() => {
     const api = axios.create({ baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001', headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
-    Promise.allSettled([api.get('/api/auth/me'), api.get('/api/exams'), api.get('/api/attempts/recent'), api.get('/api/attempts/stats')])
-      .then(([u, e, a, s]) => {
-        if (u.status === 'fulfilled') setUser(u.value.data.user); else throw new Error();
-        if (e.status === 'fulfilled') setExams(e.value.data.exams || []);
-        if (a.status === 'fulfilled') setAttempts(a.value.data.attempts || []);
-        if (s.status === 'fulfilled') setStats(s.value.data.stats || null);
-      }).catch(() => router.push('/')).finally(() => setLoading(false));
-  }, [router]);
+    
+    const consentCode = searchParams.get('consent_callback');
+    const verifyConsent = async () => {
+      if (consentCode) {
+        try {
+          await api.post('/api/consent/verify', { code: consentCode, dob: '2010-01-01' });
+          alert('DPDP Consent verified successfully!');
+          router.replace('/dashboard');
+        } catch (e) {
+          console.error('Consent verification failed', e);
+        }
+      }
+    };
+
+    verifyConsent().then(() => {
+      Promise.allSettled([api.get('/api/auth/me'), api.get('/api/exams'), api.get('/api/attempts/recent'), api.get('/api/attempts/stats')])
+        .then(([u, e, a, s]) => {
+          if (u.status === 'fulfilled') setUser(u.value.data.user); else throw new Error();
+          if (e.status === 'fulfilled') setExams(e.value.data.exams || []);
+          if (a.status === 'fulfilled') setAttempts(a.value.data.attempts || []);
+          if (s.status === 'fulfilled') setStats(s.value.data.stats || null);
+        }).catch(() => router.push('/')).finally(() => setLoading(false));
+    });
+  }, [router, searchParams]);
 
   const activeAttempt = attempts.find(a => a.status === 'in_progress');
   const completedAttempts = attempts.filter(a => a.status === 'submitted');
@@ -50,10 +72,14 @@ export default function Dashboard() {
       {/* Sidebar - Clean, Rounded, Premium */}
       <aside className="w-full md:w-64 border-r border-[var(--border)] bg-[var(--bg-base)]/50 backdrop-blur-xl p-6 flex flex-col gap-8 sticky top-0 md:h-screen z-20">
         <div className="flex items-center gap-3 text-[var(--text-highlight)] px-2">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent to-accent-secondary flex items-center justify-center shadow-glow">
-            <BookOpen className="w-4 h-4 text-white" />
-          </div>
-          <span className="font-bold font-display text-xl tracking-tight">ExamForge</span>
+          {brandLogo ? (
+            <img src={brandLogo} alt={brandName} className="w-8 h-8 object-contain" />
+          ) : (
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent to-accent-secondary flex items-center justify-center shadow-glow" style={{ background: 'var(--primary, linear-gradient(to bottom right, var(--accent), var(--accent-secondary)))' }}>
+              <BookOpen className="w-4 h-4 text-white" />
+            </div>
+          )}
+          <span className="font-bold font-display text-xl tracking-tight" style={{ color: 'var(--primary, var(--text-highlight))' }}>{brandName}</span>
         </div>
         
         <nav className="flex-1 space-y-1">
@@ -232,5 +258,13 @@ function NavItem({ icon, label, active, onClick, href }: { icon: any, label: str
     <button onClick={onClick} className={className}>
       {content}
     </button>
+  );
+}
+
+export default function Dashboard() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[var(--bg-base)] flex items-center justify-center">Loading Dashboard...</div>}>
+      <DashboardContent />
+    </Suspense>
   );
 }
