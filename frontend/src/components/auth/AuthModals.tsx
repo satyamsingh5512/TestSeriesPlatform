@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTenant } from '@/components/TenantProvider';
 
 const DEFAULT_TENANT_ID = '2375cd52-f3da-46e2-9e6e-58eddb9c9878';
 
@@ -41,13 +42,13 @@ export function LoginModal({ isOpen, onClose, onSwitch, onForgotPassword }: any)
               <div>
                 <div className="flex justify-between items-center mb-1">
                   <label className="text-xs font-semibold text-muted block">Password</label>
-                  <button type="button" onClick={onForgotPassword} className="text-[10px] font-bold text-blue-600 hover:underline">Forgot?</button>
+                  <button type="button" onClick={onForgotPassword} className="text-[10px] font-bold text-blue-600 hover:underline" style={{ color: 'var(--primary, #2563eb)' }}>Forgot?</button>
                 </div>
                 <input type="password" required onChange={e => setForm({...form, password: e.target.value})} />
               </div>
-              <button type="submit" className="btn btn-primary w-full justify-center py-2.5">Continue</button>
+              <button type="submit" className="btn btn-primary w-full justify-center py-2.5" style={{ backgroundColor: 'var(--primary, #0f172a)' }}>Continue</button>
             </form>
-            <p className="text-xs text-muted mt-6 text-center">New? <button onClick={onSwitch} className="text-accent hover:underline">Create account</button></p>
+            <p className="text-xs text-muted mt-6 text-center">New? <button onClick={onSwitch} className="text-accent hover:underline" style={{ color: 'var(--primary, #2563eb)' }}>Create account</button></p>
             <button onClick={onClose} className="absolute top-4 right-4 text-muted hover:text-primary">✕</button>
           </motion.div>
         </div>
@@ -60,12 +61,13 @@ export function RegisterModal({ isOpen, onClose, onSwitch }: any) {
   const router = useRouter();
   const [form, setForm] = useState({ name: '', email: '', password: '' });
   const [error, setError] = useState('');
+  const { tenant } = useTenant();
   
   const submit = async (e: any) => {
     e.preventDefault();
     setError('');
     try {
-      const { data } = await axios.post(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/auth/register`, { ...form, tenant_id: DEFAULT_TENANT_ID });
+      const { data } = await axios.post(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/auth/register`, { ...form, tenant_id: tenant?.id || DEFAULT_TENANT_ID });
       localStorage.setItem('token', data.token); localStorage.setItem('user', JSON.stringify(data.user)); router.push('/dashboard');
     } catch (err: any) { 
       setError(err.response?.data?.error || 'Registration failed. Please try again.'); 
@@ -83,9 +85,9 @@ export function RegisterModal({ isOpen, onClose, onSwitch }: any) {
               <div><label className="text-xs font-semibold text-muted block mb-1">Name</label><input type="text" required onChange={e => setForm({...form, name: e.target.value})} /></div>
               <div><label className="text-xs font-semibold text-muted block mb-1">Email</label><input type="email" required onChange={e => setForm({...form, email: e.target.value})} /></div>
               <div><label className="text-xs font-semibold text-muted block mb-1">Password</label><input type="password" required onChange={e => setForm({...form, password: e.target.value})} /></div>
-              <button type="submit" className="btn btn-primary w-full justify-center py-2.5">Join</button>
+              <button type="submit" className="btn btn-primary w-full justify-center py-2.5" style={{ backgroundColor: 'var(--primary, #0f172a)' }}>Join</button>
             </form>
-            <p className="text-xs text-muted mt-6 text-center">Member? <button onClick={onSwitch} className="text-accent hover:underline">Sign In</button></p>
+            <p className="text-xs text-muted mt-6 text-center">Member? <button onClick={onSwitch} className="text-accent hover:underline" style={{ color: 'var(--primary, #2563eb)' }}>Sign In</button></p>
             <button onClick={onClose} className="absolute top-4 right-4 text-muted hover:text-primary">✕</button>
           </motion.div>
         </div>
@@ -98,12 +100,13 @@ export function ForgotPasswordModal({ isOpen, onClose, onSwitchToLogin, onSwitch
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const { tenant } = useTenant();
   
   const submit = async (e: any) => {
     e.preventDefault();
     setError('');
     try {
-      await axios.post(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/auth/forgot-password`, { email, tenant_id: DEFAULT_TENANT_ID });
+      await axios.post(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/auth/forgot-password`, { email, tenant_id: tenant?.id || DEFAULT_TENANT_ID });
       setSuccess(true);
       setTimeout(() => onSwitchToReset(email), 2000); // Auto-switch to reset modal
     } catch (err: any) { 
@@ -126,9 +129,9 @@ export function ForgotPasswordModal({ isOpen, onClose, onSwitchToLogin, onSwitch
                 <label className="text-xs font-semibold text-muted block mb-1">Email</label>
                 <input type="email" required value={email} onChange={e => setEmail(e.target.value)} className="w-full" />
               </div>
-              <button type="submit" className="btn btn-primary w-full justify-center py-2.5">Send OTP</button>
+              <button type="submit" className="btn btn-primary w-full justify-center py-2.5" style={{ backgroundColor: 'var(--primary, #0f172a)' }}>Send OTP</button>
             </form>
-            <p className="text-xs text-muted mt-6 text-center">Remembered? <button onClick={onSwitchToLogin} className="text-accent hover:underline">Sign In</button></p>
+            <p className="text-xs text-muted mt-6 text-center">Remembered? <button onClick={onSwitchToLogin} className="text-accent hover:underline" style={{ color: 'var(--primary, #2563eb)' }}>Sign In</button></p>
             <button onClick={onClose} className="absolute top-4 right-4 text-muted hover:text-primary">✕</button>
           </motion.div>
         </div>
@@ -141,12 +144,13 @@ export function ResetPasswordModal({ isOpen, onClose, onSwitchToLogin, initialEm
   const [form, setForm] = useState({ email: initialEmail || '', otp: '', new_password: '' });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const { tenant } = useTenant();
   
   const submit = async (e: any) => {
     e.preventDefault();
     setError('');
     try {
-      await axios.post(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/auth/reset-password`, { ...form, tenant_id: DEFAULT_TENANT_ID });
+      await axios.post(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/auth/reset-password`, { ...form, tenant_id: tenant?.id || DEFAULT_TENANT_ID });
       setSuccess(true);
       setTimeout(() => onSwitchToLogin(), 2000); // Auto-switch to login modal
     } catch (err: any) { 
@@ -177,9 +181,9 @@ export function ResetPasswordModal({ isOpen, onClose, onSwitchToLogin, initialEm
                 <label className="text-xs font-semibold text-muted block mb-1">New Password</label>
                 <input type="password" required value={form.new_password} onChange={e => setForm({...form, new_password: e.target.value})} className="w-full" />
               </div>
-              <button type="submit" className="btn btn-primary w-full justify-center py-2.5">Reset Password</button>
+              <button type="submit" className="btn btn-primary w-full justify-center py-2.5" style={{ backgroundColor: 'var(--primary, #0f172a)' }}>Reset Password</button>
             </form>
-            <p className="text-xs text-muted mt-6 text-center"><button onClick={onSwitchToLogin} className="text-accent hover:underline">Back to Sign In</button></p>
+            <p className="text-xs text-muted mt-6 text-center"><button onClick={onSwitchToLogin} className="text-accent hover:underline" style={{ color: 'var(--primary, #2563eb)' }}>Back to Sign In</button></p>
             <button onClick={onClose} className="absolute top-4 right-4 text-muted hover:text-primary">✕</button>
           </motion.div>
         </div>
