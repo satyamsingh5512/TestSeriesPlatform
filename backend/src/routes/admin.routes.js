@@ -136,6 +136,26 @@ router.patch('/exams/:id', async (req, res, next) => {
 });
 
 /**
+ * DELETE /api/admin/exams/:id
+ * Delete an exam
+ */
+router.delete('/exams/:id', async (req, res, next) => {
+  try {
+    const { tenant_id } = req.user;
+    const { id } = req.params;
+
+    const result = await pool.query(
+      'DELETE FROM exams WHERE id = $1 AND tenant_id = $2 RETURNING id',
+      [id, tenant_id]
+    );
+
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Exam not found' });
+
+    res.json({ status: 'success', message: 'Exam deleted successfully', deleted_id: result.rows[0].id });
+  } catch (err) { next(err); }
+});
+
+/**
  * GET /api/admin/exams/:examId/attempts
  * List all attempts for an exam
  */
