@@ -79,7 +79,7 @@ export default function AdminUsersPage() {
           <h1 className="text-3xl font-bold font-display text-highlight tracking-tight">User Management</h1>
           <p className="text-sm text-muted mt-1">Control access, roles, and profiles within your tenant.</p>
         </div>
-        <button onClick={() => openModal()} className="btn btn-primary h-10 px-6 shadow-crisp">
+        <button onClick={() => openModal()} className="btn btn-primary h-10 px-6 shadow-glow-hover">
           <Plus className="w-4 h-4 mr-2" /> Add User
         </button>
       </header>
