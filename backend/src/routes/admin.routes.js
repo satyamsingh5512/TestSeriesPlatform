@@ -6,6 +6,7 @@ const roleMiddleware = require('../middleware/role.middleware');
 const axios = require('axios');
 const FormData = require('form-data');
 const multer = require('multer');
+const bcrypt = require('bcryptjs');
 
 const upload = multer({ storage: multer.memoryStorage() });
 const router = express.Router();
@@ -320,6 +321,94 @@ router.post('/ocr/extract', upload.single('image'), async (req, res, next) => {
     }
     next(err);
   }
+});
+
+/**
+ * GET /api/admin/stats
+ * Admin dashboard statistics
+ */
+router.get('/stats', async (req, res, next) => {
+  try {
+    const { tenant_id } = req.user;
+    const statsRes = await pool.query(
+      `SELECT 
+        (SELECT COUNT(*) FROM users WHERE tenant_id = $1) as total_users,
+        (SELECT COUNT(*) FROM exams WHERE tenant_id = $1) as total_exams,
+        (SELECT COUNT(*) FROM attempts WHERE tenant_id = $1 AND status = 'in_progress') as active_attempts,
+        (SELECT AVG(total_score) FROM attempts WHERE tenant_id = $1 AND status = 'submitted') as avg_score
+      `,
+      [tenant_id]
+    );
+    res.json({ status: 'success', stats: statsRes.rows[0] });
+  } catch (err) { next(err); }
+});
+
+/**
+ * GET /api/admin/users
+ * List users
+ */
+router.get('/users', async (req, res, next) => {
+  try {
+    const { tenant_id } = req.user;
+    const result = await pool.query(
+      `SELECT id, name, email, role, dob, consent_verified, created_at
+       FROM users WHERE tenant_id = $1 ORDER BY created_at DESC`,
+      [tenant_id]
+    );
+    res.json({ status: 'success', users: result.rows });
+  } catch (err) { next(err); }
+});
+
+/**
+ * POST /api/admin/users
+ * Create user
+ */
+router.post('/users', async (req, res, next) => {
+  try {
+    const { tenant_id } = req.user;
+    const { name, email, password, role } = req.body;
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const result = await pool.query(
+      `INSERT INTO users (name, email, password_hash, tenant_id, role)
+       VALUES ($1, $2, $3, $4, $5) RETURNING id, name, email, role`,
+      [name, email, hashedPassword, tenant_id, role || 'student']
+    );
+    res.json({ status: 'success', user: result.rows[0] });
+  } catch (err) { next(err); }
+});
+
+/**
+ * PUT /api/admin/users/:id
+ * Update user
+ */
+router.put('/users/:id', async (req, res, next) => {
+  try {
+    const { tenant_id } = req.user;
+    const { name, email, role } = req.body;
+    const result = await pool.query(
+      `UPDATE users SET name = $1, email = $2, role = $3, updated_at = NOW()
+       WHERE id = $4 AND tenant_id = $5 RETURNING id, name, email, role`,
+      [name, email, role, req.params.id, tenant_id]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ error: 'User not found' });
+    res.json({ status: 'success', user: result.rows[0] });
+  } catch (err) { next(err); }
+});
+
+/**
+ * DELETE /api/admin/users/:id
+ * Delete user
+ */
+router.delete('/users/:id', async (req, res, next) => {
+  try {
+    const { tenant_id } = req.user;
+    const result = await pool.query(
+      `DELETE FROM users WHERE id = $1 AND tenant_id = $2 RETURNING id`,
+      [req.params.id, tenant_id]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ error: 'User not found' });
+    res.json({ status: 'success', deleted_id: result.rows[0].id });
+  } catch (err) { next(err); }
 });
 
 module.exports = router;
