@@ -20,11 +20,19 @@ export default function ExamAttemptsPage() {
       .finally(() => setLoading(false));
   }, [id]);
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center font-mono animate-pulseText text-muted">Loading Attempts...</div>;
-  if (error) return <div className="min-h-screen flex items-center justify-center text-red-500 font-semibold">{error}</div>;
+  if (loading) return (
+    <div className="p-6 md:p-12 space-y-8 max-w-5xl mx-auto animate-pulse">
+      <div className="flex justify-between items-center mb-8">
+        <div className="h-8 bg-panel-hover rounded w-1/3"></div>
+        <div className="h-10 bg-panel-hover rounded w-24"></div>
+      </div>
+      <div className="h-[400px] bg-panel-hover rounded-xl border border-themeBorder"></div>
+    </div>
+  );
+  if (error) return <div className="flex items-center justify-center p-12 text-red-500 font-semibold">{error}</div>;
 
   return (
-    <div className="min-h-screen animate-fadeIn max-w-5xl mx-auto p-6 md:p-12 space-y-8">
+    <div className="animate-fadeIn max-w-5xl mx-auto p-6 md:p-12 space-y-8">
       <header className="flex justify-between items-center border-b border-themeBorder pb-6">
         <div>
           <h1 className="text-2xl font-semibold text-highlight">Exam Sessions & Proctoring</h1>
