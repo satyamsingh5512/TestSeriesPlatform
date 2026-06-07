@@ -95,6 +95,12 @@ export default function CreateExamPage() {
 
   const save = async () => {
     setSaveError('');
+    if (!meta.title || meta.title.trim() === '') {
+      setSaveError('Exam Title is mandatory. Please provide a title.');
+      setTab('meta');
+      return;
+    }
+
     setSaving(true);
     try {
       // Sanitize: convert empty string duration_minutes to null
@@ -135,7 +141,7 @@ export default function CreateExamPage() {
 
       {tab === 'meta' && (
         <div className="panel p-6 space-y-5">
-          <div><label className="block text-xs font-semibold text-muted mb-2">Exam Title</label><input value={meta.title} onChange={e => setMeta({...meta, title: e.target.value})} placeholder="e.g. Midterm 2026" /></div>
+          <div><label className="block text-xs font-semibold text-muted mb-2">Exam Title <span className="text-red-500">*</span></label><input required value={meta.title} onChange={e => setMeta({...meta, title: e.target.value})} placeholder="e.g. Midterm 2026" className="w-full" /></div>
           <div className="grid grid-cols-2 gap-4">
              <div><label className="block text-xs font-semibold text-muted mb-2">Duration (mins)</label><input type="number" value={meta.duration_minutes} onChange={e => setMeta({...meta, duration_minutes: parseInt(e.target.value)})} /></div>
              <div><label className="block text-xs font-semibold text-muted mb-2">Format</label><select value={meta.exam_type} onChange={e => setMeta({...meta, exam_type: e.target.value})}><option value="fixed">Standard</option><option value="adaptive">Adaptive</option></select></div>
