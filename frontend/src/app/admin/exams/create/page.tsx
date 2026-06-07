@@ -27,8 +27,27 @@ export default function CreateExamPage() {
       });
 
       if (res.data?.data?.text) {
+        const text = res.data.data.text;
+        const parts = text.split(/(?:^|\n)\s*(?:Q(?:uestion)?\s*\d+[\.\)\:]?|\d+[\.\)\:])\s+/i).filter((p: string) => p.trim());
+        
         const n = [...sections];
-        n[sectionIndex].questions[questionIndex].text = res.data.data.text;
+        if (parts.length > 0) {
+          n[sectionIndex].questions[questionIndex].text = parts[0];
+          if (parts.length > 1) {
+            const newQuestions = parts.slice(1).map((p: string) => ({
+              qtype: 'MCQ',
+              difficulty_tier: 'medium',
+              text: p,
+              options: {A:'', B:'', C:'', D:''},
+              correct_key: '',
+              marks: 4,
+              negative_marks: -1
+            }));
+            n[sectionIndex].questions.splice(questionIndex + 1, 0, ...newQuestions);
+          }
+        } else {
+          n[sectionIndex].questions[questionIndex].text = text;
+        }
         setSections(n);
       }
     } catch (err: any) {
