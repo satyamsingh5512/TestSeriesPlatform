@@ -1,10 +1,11 @@
 const jwt = require('jsonwebtoken');
+const pool = require('../db/pool');
 
 /**
  * Production-grade Authentication Middleware
  * Verifies JWT and injects user & tenant context into request
  */
-function authMiddleware(req, res, next) {
+async function authMiddleware(req, res, next) {
   const authHeader = req.headers.authorization;
   
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -19,6 +20,17 @@ function authMiddleware(req, res, next) {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
+    // Check single active session against DB
+    if (decoded.jti) {
+      const result = await pool.query('SELECT current_session_token FROM users WHERE id = $1', [decoded.id]);
+      if (result.rows.length === 0 || result.rows[0].current_session_token !== decoded.jti) {
+        return res.status(401).json({ 
+          status: 'error',
+          message: 'Session invalidated. Logged in from another device.' 
+        });
+      }
+    }
+
     // Inject full context
     req.user = {
       id: decoded.id,
