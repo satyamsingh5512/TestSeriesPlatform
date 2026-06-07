@@ -29,20 +29,56 @@ export default function CreateExamPage() {
       if (res.data?.data?.text) {
         const text = res.data.data.text;
         const parts = text.split(/(?:^|\n)\s*(?:Q(?:uestion)?\s*\d+[\.\)\:]?|\d+[\.\)\:])\s+/i).filter((p: string) => p.trim());
-        
+
+        const parsePart = (rawText: string) => {
+          let qText = rawText;
+          const options = { A: '', B: '', C: '', D: '' };
+          let correct_key = '';
+
+          const ansMatch = qText.match(/(?:Ans(?:wer)?|Correct)(?:\s*is|\s*option)?\s*[:\-]?\s*([a-d])/i);
+          if (ansMatch) {
+            correct_key = ansMatch[1].toUpperCase();
+            qText = qText.substring(0, ansMatch.index).trim();
+          }
+
+          const optPattern = /(?:^|\s|\n)[\(]?([A-D])[\)\.]\s+((?:(?!\s[\(]?[A-D][\)\.]\s).)*)/gi;
+          let match;
+          let firstOptIndex = -1;
+          while ((match = optPattern.exec(qText)) !== null) {
+            if (firstOptIndex === -1) firstOptIndex = match.index;
+            const optLetter = match[1].toUpperCase();
+            if (['A', 'B', 'C', 'D'].includes(optLetter)) {
+              options[optLetter as keyof typeof options] = match[2].trim();
+            }
+          }
+
+          if (firstOptIndex !== -1) {
+            qText = qText.substring(0, firstOptIndex).trim();
+          }
+
+          return { text: qText, options, correct_key };
+        };
+
         const n = [...sections];
         if (parts.length > 0) {
-          n[sectionIndex].questions[questionIndex].text = parts[0];
+          const parsedFirst = parsePart(parts[0]);
+          n[sectionIndex].questions[questionIndex].text = parsedFirst.text;
+          n[sectionIndex].questions[questionIndex].options = { ...n[sectionIndex].questions[questionIndex].options, ...parsedFirst.options };
+          if (parsedFirst.correct_key) n[sectionIndex].questions[questionIndex].correct_key = parsedFirst.correct_key;
+
           if (parts.length > 1) {
-            const newQuestions = parts.slice(1).map((p: string) => ({
-              qtype: 'MCQ',
-              difficulty_tier: 'medium',
-              text: p,
-              options: {A:'', B:'', C:'', D:''},
-              correct_key: '',
-              marks: 4,
-              negative_marks: -1
-            }));
+            const newQuestions = parts.slice(1).map((p: string) => {
+              const parsed = parsePart(p);
+              return {
+                qtype: 'MCQ',
+                difficulty_tier: 'medium',
+                text: parsed.text,
+                options: { A: parsed.options.A || '', B: parsed.options.B || '', C: parsed.options.C || '', D: parsed.options.D || '' },
+                correct_key: parsed.correct_key,
+                marks: 4,
+                negative_marks: -1
+              };
+            });
             n[sectionIndex].questions.splice(questionIndex + 1, 0, ...newQuestions);
           }
         } else {
