@@ -102,7 +102,7 @@ export default function AdminDashboardPage() {
 
       </motion.div>
 
-      <div className="panel p-8 bg-gradient-to-br from-accent/5 to-transparent border-accent/20 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+      <div className="panel p-8 border-themeBorder flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div className="flex items-start gap-4">
            <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center text-accent">
               <Settings2 className="w-6 h-6" />
@@ -112,7 +112,7 @@ export default function AdminDashboardPage() {
              <p className="text-sm text-muted mt-1">Enable or disable platform modules for your tenant seamlessly.</p>
            </div>
         </div>
-        <button onClick={() => router.push('/admin/features')} className="btn bg-highlight text-base hover:text-muted border-none h-11 px-8 rounded-full font-bold shadow-lg w-full md:w-auto">
+        <button onClick={() => router.push('/admin/features')} className="btn bg-highlight text-base hover:text-muted border-none h-11 px-8 rounded-full font-bold shadow-crisp w-full md:w-auto">
           Configure Features
         </button>
       </div>
