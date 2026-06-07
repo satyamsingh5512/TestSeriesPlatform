@@ -16,10 +16,18 @@ export default function AdminExamsPage() {
     apiClient().get('/api/admin/exams').then(r => setExams(r.data.exams)).finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center font-mono animate-pulseText text-muted">Loading System...</div>;
+  if (loading) return (
+    <div className="p-6 md:p-12 space-y-8 max-w-5xl mx-auto animate-pulse">
+      <div className="flex justify-between items-center mb-8">
+        <div className="h-8 bg-panel-hover rounded w-1/4"></div>
+        <div className="flex gap-3"><div className="h-10 bg-panel-hover rounded w-24"></div><div className="h-10 bg-panel-hover rounded w-32"></div></div>
+      </div>
+      <div className="h-64 bg-panel-hover rounded-xl border border-themeBorder"></div>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen animate-fadeIn max-w-5xl mx-auto p-6 md:p-12 space-y-8">
+    <div className="animate-fadeIn max-w-5xl mx-auto p-6 md:p-12 space-y-8">
       <header className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-semibold text-highlight">Exam Control</h1>
