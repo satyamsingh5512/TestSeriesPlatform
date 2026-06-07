@@ -30,7 +30,9 @@ export const TenantProvider = ({ children }: { children: React.ReactNode }) => {
       try {
         // In local development, you might want to test this by manually setting a subdomain header
         // For production, the API will read the hostname.
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+        const configuredApiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+        const trimmedApiUrl = configuredApiUrl.replace(/\/$/, '');
+        const apiUrl = trimmedApiUrl.endsWith('/api') ? trimmedApiUrl : `${trimmedApiUrl}/api`;
         
         // We can optionally determine subdomain from window.location.hostname in frontend
         // and pass it as a header if needed, but the backend handles it by default.

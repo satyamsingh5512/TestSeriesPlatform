@@ -66,6 +66,10 @@ CREATE TABLE users (
     dob DATE,
     consent_verified BOOLEAN DEFAULT FALSE,
     parent_consent_at TIMESTAMPTZ,
+    current_session_token TEXT,
+    last_login_at TIMESTAMPTZ,
+    reset_otp VARCHAR(6),
+    reset_otp_expires_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
     UNIQUE(tenant_id, email)
@@ -163,7 +167,8 @@ CREATE TABLE violations (
     type VARCHAR(50) NOT NULL, -- TAB_SWITCH, MULTIPLE_FACES, etc.
     details JSONB DEFAULT '{}',
     occurred_at TIMESTAMPTZ DEFAULT NOW(),
-    status VARCHAR(20) DEFAULT 'flagged' -- flagged, cleared, suspicious
+    status VARCHAR(20) DEFAULT 'flagged', -- flagged, cleared, suspicious
+    purge_after TIMESTAMPTZ
 );
 
 -- 9. Analysis Reports
@@ -257,6 +262,8 @@ CREATE INDEX idx_attempts_user ON attempts(user_id);
 CREATE INDEX idx_attempts_exam ON attempts(exam_id);
 CREATE INDEX idx_responses_attempt ON responses(attempt_id);
 CREATE INDEX idx_violations_attempt ON violations(attempt_id);
+CREATE INDEX idx_users_password_reset ON users(tenant_id, email, reset_otp_expires_at) WHERE reset_otp IS NOT NULL;
+CREATE INDEX idx_violations_purge_after ON violations(purge_after) WHERE purge_after IS NOT NULL;
 
 -- Analytics & Search
 CREATE INDEX idx_questions_topic ON questions(topic);

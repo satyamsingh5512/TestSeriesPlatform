@@ -5,13 +5,7 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 const errorHandler = require('./middleware/error.middleware');
-
-// Start Background Jobs & Workers
-require('./workers/response.worker');
-const { startConsentJob } = require('./jobs/consent.job');
-const { startPurgeJob } = require('./jobs/purge.job');
-startConsentJob();
-startPurgeJob();
+const ensureRuntimeSchema = require('./db/ensure_runtime_schema');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -35,8 +29,14 @@ app.use(cors({
 app.use(express.json());
 app.use(morgan('dev'));
 
+// --- Root Health Compatibility ---
+app.get('/', (req, res) => {
+  res.json({ status: 'ok', service: 'edtech-backend' });
+});
+
 // --- Routes ---
 app.use('/api/tenant', require('./routes/tenant.routes'));
+app.use('/tenant', require('./routes/tenant.routes'));
 app.use('/api/auth', require('./routes/auth.routes'));
 app.use('/api/consent', require('./routes/consent.routes'));
 app.use('/api/admin', require('./routes/admin.routes'));
@@ -75,8 +75,26 @@ app.get('/health', async (req, res) => {
 // --- Global Error Handler ---
 app.use(errorHandler);
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Backend running on port ${PORT}`);
-});
+async function startServer() {
+  try {
+    await ensureRuntimeSchema();
+
+    // Start Background Jobs & Workers after schema is safe to query.
+    require('./workers/response.worker');
+    const { startConsentJob } = require('./jobs/consent.job');
+    const { startPurgeJob } = require('./jobs/purge.job');
+    startConsentJob();
+    startPurgeJob();
+
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`🚀 Backend running on port ${PORT}`);
+    });
+  } catch (err) {
+    console.error('Backend startup failed:', err);
+    process.exit(1);
+  }
+}
+
+startServer();
 
 module.exports = app;

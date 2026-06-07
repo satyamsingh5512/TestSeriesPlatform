@@ -2,6 +2,15 @@ const { Pool } = require('pg');
 
 let poolConfig;
 
+function isLocalDatabaseHost(connectionString) {
+  try {
+    const { hostname } = new URL(connectionString);
+    return ['localhost', '127.0.0.1', 'postgres', 'edtech_postgres'].includes(hostname);
+  } catch (e) {
+    return false;
+  }
+}
+
 if (process.env.DATABASE_URL && process.env.DATABASE_URL.includes('@')) {
   let url = process.env.DATABASE_URL;
   try {
@@ -38,24 +47,34 @@ if (process.env.DATABASE_URL && process.env.DATABASE_URL.includes('@')) {
   };
 }
 
-// Ensure SSL is applied even if using connectionString for Supabase
-if (poolConfig.connectionString && !poolConfig.connectionString.includes('sslmode=')) {
+const shouldUseSsl = poolConfig.connectionString
+  ? !isLocalDatabaseHost(poolConfig.connectionString) && !poolConfig.connectionString.includes('sslmode=disable')
+  : Boolean(poolConfig.ssl);
+
+// Ensure SSL is applied for hosted PostgreSQL providers such as Supabase.
+if (poolConfig.connectionString && shouldUseSsl && !poolConfig.connectionString.includes('sslmode=')) {
   poolConfig.connectionString += (poolConfig.connectionString.includes('?') ? '&' : '?') + 'sslmode=require&uselibpqcompat=true';
 } else if (poolConfig.connectionString && poolConfig.connectionString.includes('sslmode=require') && !poolConfig.connectionString.includes('uselibpqcompat=true')) {
   poolConfig.connectionString += '&uselibpqcompat=true';
 }
 
-const pool = new Pool({
+const finalPoolConfig = {
   ...poolConfig,
   max: 20,
   idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 10000,
-  ssl: poolConfig.ssl || { rejectUnauthorized: false }
-});
+  connectionTimeoutMillis: 10000
+};
+
+if (shouldUseSsl) {
+  finalPoolConfig.ssl = poolConfig.ssl || { rejectUnauthorized: false };
+} else {
+  delete finalPoolConfig.ssl;
+}
+
+const pool = new Pool(finalPoolConfig);
 
 pool.on('error', (err) => {
   console.error('Unexpected PostgreSQL pool error:', err);
-  process.exit(-1);
 });
 
 module.exports = pool;
