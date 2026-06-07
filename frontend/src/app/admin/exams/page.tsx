@@ -54,6 +54,22 @@ export default function AdminExamsPage() {
     }
   };
 
+  const handleDeleteExam = async () => {
+    if (!editingExam) return;
+    if (!confirm(`Are you sure you want to delete "${editingExam.title}"? This will permanently remove all questions and student attempts associated with it.`)) return;
+    
+    setSaving(true);
+    try {
+      await apiClient().delete(`/api/admin/exams/${editingExam.id}`);
+      setEditModalOpen(false);
+      fetchExams();
+    } catch (err: any) {
+      alert(err.response?.data?.error || 'Failed to delete exam');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   if (loading) return (
     <div className="p-6 md:p-12 space-y-8 max-w-5xl mx-auto animate-pulse">
       <div className="flex justify-between items-center mb-8">
@@ -149,11 +165,16 @@ export default function AdminExamsPage() {
                     </select>
                   </div>
                 </div>
-                <div className="pt-4 flex justify-end gap-3">
-                  <button type="button" onClick={() => setEditModalOpen(false)} className="btn bg-panel hover:bg-panel-hover text-muted">Cancel</button>
-                  <button type="submit" disabled={saving} className="btn btn-primary disabled:opacity-50 shadow-crisp">
-                    {saving ? 'Saving...' : 'Save Changes'}
+                <div className="pt-4 flex justify-between gap-3 border-t border-themeBorder mt-4">
+                  <button type="button" onClick={handleDeleteExam} disabled={saving} className="btn bg-red-500/10 hover:bg-red-500/20 text-red-500 border-red-500/20 shadow-none">
+                    Delete Test
                   </button>
+                  <div className="flex gap-3">
+                    <button type="button" onClick={() => setEditModalOpen(false)} className="btn bg-panel hover:bg-panel-hover text-muted">Cancel</button>
+                    <button type="submit" disabled={saving} className="btn btn-primary disabled:opacity-50 shadow-crisp">
+                      {saving ? 'Saving...' : 'Save Changes'}
+                    </button>
+                  </div>
                 </div>
               </form>
             </motion.div>
