@@ -40,7 +40,9 @@ if (process.env.DATABASE_URL && process.env.DATABASE_URL.includes('@')) {
 
 // Ensure SSL is applied even if using connectionString for Supabase
 if (poolConfig.connectionString && !poolConfig.connectionString.includes('sslmode=')) {
-  poolConfig.connectionString += (poolConfig.connectionString.includes('?') ? '&' : '?') + 'sslmode=require';
+  poolConfig.connectionString += (poolConfig.connectionString.includes('?') ? '&' : '?') + 'sslmode=require&uselibpqcompat=true';
+} else if (poolConfig.connectionString && poolConfig.connectionString.includes('sslmode=require') && !poolConfig.connectionString.includes('uselibpqcompat=true')) {
+  poolConfig.connectionString += '&uselibpqcompat=true';
 }
 
 const pool = new Pool({
