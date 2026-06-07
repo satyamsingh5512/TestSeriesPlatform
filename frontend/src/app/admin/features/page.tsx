@@ -37,10 +37,17 @@ export default function AdminFeaturesPage() {
     }
   };
 
-  if (loading && features.length === 0) return <div className="min-h-screen flex items-center justify-center font-mono animate-pulseText text-muted">Loading CMS...</div>;
+  if (loading && features.length === 0) return (
+    <div className="p-6 md:p-12 space-y-8 max-w-5xl mx-auto animate-pulse">
+      <div className="h-8 bg-panel-hover rounded w-1/4 mb-8"></div>
+      <div className="space-y-4">
+        {[1,2,3].map(i => <div key={i} className="h-24 bg-panel-hover rounded-xl border border-themeBorder"></div>)}
+      </div>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen animate-fadeIn max-w-5xl mx-auto p-6 md:p-12 space-y-8">
+    <div className="animate-fadeIn max-w-5xl mx-auto p-6 md:p-12 space-y-8">
       <header className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-semibold text-highlight">Module Management</h1>
