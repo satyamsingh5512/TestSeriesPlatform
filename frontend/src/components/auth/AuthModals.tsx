@@ -11,12 +11,15 @@ export function LoginModal({ isOpen, onClose, onSwitch, onForgotPassword }: any)
   const router = useRouter();
   const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
+  const [activeSessionPrompt, setActiveSessionPrompt] = useState<{show: boolean, lastLoginAt: string | null}>({ show: false, lastLoginAt: null });
   
-  const submit = async (e: any) => {
-    e.preventDefault();
+  const submit = async (e?: any, force_logout = false) => {
+    if (e) e.preventDefault();
     setError('');
+    setActiveSessionPrompt({ show: false, lastLoginAt: null });
     try {
-      const { data } = await axios.post(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/auth/login`, form);
+      const payload = { ...form, force_logout };
+      const { data } = await axios.post(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/auth/login`, payload);
       localStorage.setItem('token', data.token); 
       localStorage.setItem('user', JSON.stringify(data.user));
       // Role-based redirect
@@ -26,7 +29,11 @@ export function LoginModal({ isOpen, onClose, onSwitch, onForgotPassword }: any)
         router.push('/dashboard');
       }
     } catch (err: any) { 
-      setError(err.response?.data?.error || 'Login failed. Please try again.'); 
+      if (err.response?.status === 409 && err.response?.data?.active_session_exists) {
+        setActiveSessionPrompt({ show: true, lastLoginAt: err.response.data.last_login_at });
+      } else {
+        setError(err.response?.data?.error || 'Login failed. Please try again.'); 
+      }
     }
   };
 
@@ -37,17 +44,32 @@ export function LoginModal({ isOpen, onClose, onSwitch, onForgotPassword }: any)
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }} className="panel w-full max-w-sm p-8 shadow-2xl">
             <h2 className="text-xl font-semibold text-highlight mb-6">Sign In</h2>
             {error && <div className="text-red-500 text-sm mb-4 bg-red-500/10 p-3 rounded">{error}</div>}
-            <form onSubmit={submit} className="space-y-4">
-              <div><label className="text-xs font-semibold text-muted block mb-1">Email</label><input type="email" required onChange={e => setForm({...form, email: e.target.value})} /></div>
-              <div>
-                <div className="flex justify-between items-center mb-1">
-                  <label className="text-xs font-semibold text-muted block">Password</label>
-                  <button type="button" onClick={onForgotPassword} className="text-[10px] font-bold text-blue-600 hover:underline" style={{ color: 'var(--primary, #2563eb)' }}>Forgot?</button>
+            
+            {activeSessionPrompt.show ? (
+              <div className="space-y-4">
+                <div className="p-4 bg-yellow-500/10 border border-yellow-500/30 rounded text-sm text-yellow-600">
+                  <p className="font-semibold mb-2">Already Logged In</p>
+                  <p>This account is currently active on another device (last logged in: {new Date(activeSessionPrompt.lastLoginAt!).toLocaleString()}).</p>
+                  <p className="mt-2 text-xs">Logging in here will securely log you out of all other sessions.</p>
                 </div>
-                <input type="password" required onChange={e => setForm({...form, password: e.target.value})} />
+                <div className="flex gap-3">
+                  <button onClick={() => setActiveSessionPrompt({ show: false, lastLoginAt: null })} className="btn bg-panel hover:bg-panel-hover flex-1 text-muted">Cancel</button>
+                  <button onClick={() => submit(null, true)} className="btn btn-primary flex-1 bg-yellow-600 hover:bg-yellow-700 text-white border-none">Log out others</button>
+                </div>
               </div>
-              <button type="submit" className="btn btn-primary w-full justify-center py-2.5" style={{ backgroundColor: 'var(--primary, #0f172a)' }}>Continue</button>
-            </form>
+            ) : (
+              <form onSubmit={(e) => submit(e, false)} className="space-y-4">
+                <div><label className="text-xs font-semibold text-muted block mb-1">Email</label><input type="email" required onChange={e => setForm({...form, email: e.target.value})} /></div>
+                <div>
+                  <div className="flex justify-between items-center mb-1">
+                    <label className="text-xs font-semibold text-muted block">Password</label>
+                    <button type="button" onClick={onForgotPassword} className="text-[10px] font-bold text-blue-600 hover:underline" style={{ color: 'var(--primary, #2563eb)' }}>Forgot?</button>
+                  </div>
+                  <input type="password" required onChange={e => setForm({...form, password: e.target.value})} />
+                </div>
+                <button type="submit" className="btn btn-primary w-full justify-center py-2.5" style={{ backgroundColor: 'var(--primary, #0f172a)' }}>Continue</button>
+              </form>
+            )}
             <p className="text-xs text-muted mt-6 text-center">New? <button onClick={onSwitch} className="text-accent hover:underline" style={{ color: 'var(--primary, #2563eb)' }}>Create account</button></p>
             <button onClick={onClose} className="absolute top-4 right-4 text-muted hover:text-primary">✕</button>
           </motion.div>
