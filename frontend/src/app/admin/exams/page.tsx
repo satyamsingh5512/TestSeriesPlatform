@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import axios from 'axios';
-import { BookOpen, Plus, Settings2, X } from 'lucide-react';
+import { BookOpen, Plus, Settings2, X, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 function apiClient() { return axios.create({ baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001', headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }); }
@@ -54,13 +54,12 @@ export default function AdminExamsPage() {
     }
   };
 
-  const handleDeleteExam = async () => {
-    if (!editingExam) return;
-    if (!confirm(`Are you sure you want to delete "${editingExam.title}"? This will permanently remove all questions and student attempts associated with it.`)) return;
+  const handleDeleteExam = async (exam: any) => {
+    if (!confirm(`Are you sure you want to delete "${exam.title}"? This will permanently remove all questions and student attempts associated with it.`)) return;
     
     setSaving(true);
     try {
-      await apiClient().delete(`/api/admin/exams/${editingExam.id}`);
+      await apiClient().delete(`/api/admin/exams/${exam.id}`);
       setEditModalOpen(false);
       fetchExams();
     } catch (err: any) {
@@ -114,9 +113,12 @@ export default function AdminExamsPage() {
                   <td className="px-6 py-4 text-muted"><span className="status-tag">{ex.exam_type}</span></td>
                   <td className="px-6 py-4"><span className={`status-tag ${ex.status === 'published' ? 'status-success' : ''}`}>{ex.status}</span></td>
                   <td className="px-6 py-4 text-muted text-xs">{new Date(ex.created_at).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}</td>
-                  <td className="px-6 py-4 text-right space-x-2">
+                  <td className="px-6 py-4 text-right space-x-4 flex items-center justify-end">
                     <Link href={`/admin/exams/${ex.id}/attempts`} className="text-accent hover:underline text-xs font-semibold">Logs</Link>
-                    <button onClick={() => openEditModal(ex)} className="text-muted hover:text-highlight text-xs font-semibold ml-4">Edit</button>
+                    <button onClick={() => openEditModal(ex)} className="text-muted hover:text-highlight text-xs font-semibold">Edit</button>
+                    <button onClick={() => handleDeleteExam(ex)} className="text-muted hover:text-error transition-colors p-1" title="Delete Exam">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -127,8 +129,8 @@ export default function AdminExamsPage() {
 
       <AnimatePresence>
         {isEditModalOpen && (
-          <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-            <motion.div initial={{scale:0.95}} animate={{scale:1}} exit={{scale:0.95}} className="panel w-full max-w-md p-6 bg-[var(--bg-base)]">
+          <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
+            <motion.div initial={{scale:0.95}} animate={{scale:1}} exit={{scale:0.95}} className="panel w-full max-w-md p-6 bg-[var(--bg-base)] my-auto">
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-lg font-bold text-highlight">Edit Exam</h3>
                 <button onClick={() => setEditModalOpen(false)} className="text-muted hover:text-highlight"><X className="w-5 h-5"/></button>
@@ -165,13 +167,13 @@ export default function AdminExamsPage() {
                     </select>
                   </div>
                 </div>
-                <div className="pt-4 flex justify-between gap-3 border-t border-themeBorder mt-4">
-                  <button type="button" onClick={handleDeleteExam} disabled={saving} className="btn bg-red-500/10 hover:bg-red-500/20 text-red-500 border-red-500/20 shadow-none">
+                <div className="pt-6 flex flex-col sm:flex-row justify-between gap-4 border-t border-themeBorder mt-6">
+                  <button type="button" onClick={handleDeleteExam} disabled={saving} className="btn bg-red-500 text-white border-none hover:bg-red-600 shadow-md order-2 sm:order-1">
                     Delete Test
                   </button>
-                  <div className="flex gap-3">
-                    <button type="button" onClick={() => setEditModalOpen(false)} className="btn bg-panel hover:bg-panel-hover text-muted">Cancel</button>
-                    <button type="submit" disabled={saving} className="btn btn-primary disabled:opacity-50 shadow-crisp">
+                  <div className="flex gap-3 order-1 sm:order-2">
+                    <button type="button" onClick={() => setEditModalOpen(false)} className="btn bg-panel hover:bg-panel-hover text-muted flex-1 sm:flex-none">Cancel</button>
+                    <button type="submit" disabled={saving} className="btn btn-primary disabled:opacity-50 shadow-crisp flex-1 sm:flex-none">
                       {saving ? 'Saving...' : 'Save Changes'}
                     </button>
                   </div>
