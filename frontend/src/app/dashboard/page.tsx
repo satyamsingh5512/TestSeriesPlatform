@@ -75,11 +75,11 @@ function DashboardContent() {
           {brandLogo ? (
             <img src={brandLogo} alt={brandName} className="w-8 h-8 object-contain" />
           ) : (
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent to-accent-secondary flex items-center justify-center shadow-glow" style={{ background: 'var(--primary, linear-gradient(to bottom right, var(--accent), var(--accent-secondary)))' }}>
+            <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center shadow-crisp" style={{ background: 'var(--accent)' }}>
               <BookOpen className="w-4 h-4 text-white" />
             </div>
           )}
-          <span className="font-bold font-display text-xl tracking-tight" style={{ color: 'var(--primary, var(--text-highlight))' }}>{brandName}</span>
+          <span className="font-bold font-display text-xl tracking-tight" style={{ color: 'var(--text-highlight)' }}>{brandName}</span>
         </div>
         
         <nav className="flex-1 space-y-1">
@@ -94,7 +94,7 @@ function DashboardContent() {
 
         <div className="pt-6 border-t border-[var(--border)] space-y-4">
           <div className="flex items-center gap-3 px-2">
-            <div className="w-9 h-9 rounded-full bg-[var(--bg-panel)] border border-[var(--border)] flex items-center justify-center font-bold text-xs shadow-sm">
+            <div className="w-9 h-9 rounded-full bg-[var(--bg-panel)] border border-[var(--border)] flex items-center justify-center font-bold text-xs shadow-crisp">
               {user?.name[0]}
             </div>
             <div className="flex-1 min-w-0">
@@ -104,7 +104,7 @@ function DashboardContent() {
           </div>
           
           <div className="flex gap-2">
-            <button onClick={() => { document.body.classList.toggle('light-theme'); localStorage.setItem('theme', document.body.classList.contains('light-theme') ? 'light' : 'dark'); }} className="flex-1 btn h-9 bg-[var(--bg-panel)] border-[var(--border)] hover:bg-[var(--bg-panel-hover)] flex justify-center text-[var(--text-muted)]">
+            <button onClick={() => { document.body.classList.toggle('dark-theme'); localStorage.setItem('theme', document.body.classList.contains('dark-theme') ? 'dark' : 'light'); }} className="flex-1 btn h-9 bg-[var(--bg-panel)] border-[var(--border)] hover:bg-[var(--bg-panel-hover)] flex justify-center text-[var(--text-muted)]">
               <Sun className="w-4 h-4"/>
             </button>
             <button onClick={() => { localStorage.clear(); router.push('/'); }} className="flex-1 btn h-9 bg-[var(--bg-panel)] border-[var(--border)] hover:bg-[var(--bg-panel-hover)] flex justify-center text-[var(--text-muted)] hover:text-error transition-colors">
@@ -123,7 +123,7 @@ function DashboardContent() {
               <h1 className="text-3xl font-bold font-display text-[var(--text-highlight)] tracking-tight">Good morning, {user?.name.split(' ')[0]}</h1>
               <p className="text-sm text-[var(--text-muted)] mt-1">Here is what's happening with your learning progress today.</p>
             </div>
-            <button onClick={() => setActiveTab('exams')} className="btn btn-primary shadow-glow-hover h-10 px-6 hidden md:inline-flex">
+            <button onClick={() => setActiveTab('exams')} className="btn btn-primary shadow-crisp h-10 px-6 hidden md:inline-flex">
               Start Practice Session
             </button>
           </header>
@@ -134,7 +134,7 @@ function DashboardContent() {
                 
                 {/* Active Session - Clean, Elegant Card */}
                 {activeAttempt && (
-                  <div className="panel p-8 bg-gradient-to-br from-accent/5 to-transparent border-accent/20 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 group">
+                  <div className="panel p-8 border-themeBorder flex flex-col md:flex-row justify-between items-start md:items-center gap-6 group">
                     <div className="flex items-start gap-4">
                        <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center text-accent">
                           <Clock className="w-6 h-6" />
