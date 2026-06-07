@@ -38,10 +38,14 @@ router.get('/exams', async (req, res, next) => {
  * POST /api/admin/exams
  */
 router.post('/exams', async (req, res, next) => {
+  const { title, description, duration_minutes, total_marks, exam_type, sections } = req.body;
+  if (!title || typeof title !== 'string' || title.trim() === '') {
+    return res.status(400).json({ error: 'Exam title is mandatory.' });
+  }
+
   const client = await pool.connect();
   try {
     const { tenant_id } = req.user;
-    const { title, description, duration_minutes, total_marks, exam_type, sections } = req.body;
 
     await client.query('BEGIN');
 
@@ -95,23 +99,34 @@ router.post('/exams', async (req, res, next) => {
 
 /**
  * PATCH /api/admin/exams/:id
- * Update exam status
+ * Update exam metadata and status
  */
 router.patch('/exams/:id', async (req, res, next) => {
   try {
     const { tenant_id } = req.user;
     const { id } = req.params;
-    const { status } = req.body;
+    const { status, title, description, duration_minutes, total_marks, exam_type } = req.body;
 
-    if (!['draft', 'published', 'archived'].includes(status)) {
+    if (status && !['draft', 'published', 'archived'].includes(status)) {
       return res.status(400).json({ error: 'Invalid status' });
     }
 
+    if (title !== undefined && (typeof title !== 'string' || title.trim() === '')) {
+      return res.status(400).json({ error: 'Exam title cannot be empty.' });
+    }
+
     const result = await pool.query(
-      `UPDATE exams SET status = $1, updated_at = NOW()
-       WHERE id = $2 AND tenant_id = $3
-       RETURNING id, status`,
-      [status, id, tenant_id]
+      `UPDATE exams 
+       SET status = COALESCE($1, status),
+           title = COALESCE($2, title),
+           description = COALESCE($3, description),
+           duration_minutes = COALESCE($4, duration_minutes),
+           total_marks = COALESCE($5, total_marks),
+           exam_type = COALESCE($6, exam_type),
+           updated_at = NOW()
+       WHERE id = $7 AND tenant_id = $8
+       RETURNING *`,
+      [status, title, description, duration_minutes, total_marks, exam_type, id, tenant_id]
     );
 
     if (result.rows.length === 0) return res.status(404).json({ error: 'Exam not found' });
