@@ -20,7 +20,8 @@ const registerSchema = Joi.object({
 
 const loginSchema = Joi.object({
   email: Joi.string().email().required(),
-  password: Joi.string().required()
+  password: Joi.string().required(),
+  force_logout: Joi.boolean().optional()
 });
 
 const forgotPasswordSchema = Joi.object({
@@ -38,14 +39,18 @@ const resetPasswordSchema = Joi.object({
 /**
  * Sign JWT with tenant awareness
  */
-function signToken(user) {
+function signToken(user, jti = null) {
+  const payload = { 
+    id: user.id, 
+    email: user.email, 
+    role: user.role,
+    tenant_id: user.tenant_id 
+  };
+  if (jti) {
+    payload.jti = jti;
+  }
   return jwt.sign(
-    { 
-      id: user.id, 
-      email: user.email, 
-      role: user.role,
-      tenant_id: user.tenant_id 
-    },
+    payload,
     process.env.JWT_SECRET,
     { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
   );
@@ -77,18 +82,20 @@ router.post('/register', async (req, res, next) => {
     }
 
     const password_hash = await bcrypt.hash(password, 12);
+    const sessionToken = require('crypto').randomUUID();
+    
     const result = await pool.query(
-      `INSERT INTO users (name, email, password_hash, tenant_id, dob)
-       VALUES ($1, $2, $3, $4, $5)
+      `INSERT INTO users (name, email, password_hash, tenant_id, dob, current_session_token, last_login_at)
+       VALUES ($1, $2, $3, $4, $5, $6, NOW())
        RETURNING id, name, email, role, tenant_id, created_at`,
-      [name, email, password_hash, tenant_id, dob || null]
+      [name, email, password_hash, tenant_id, dob || null, sessionToken]
     );
 
     const user = result.rows[0];
     res.status(201).json({ 
       status: 'success',
       user, 
-      token: signToken(user) 
+      token: signToken(user, sessionToken) 
     });
   } catch (err) {
     next(err);
@@ -103,12 +110,10 @@ router.post('/login', async (req, res, next) => {
       return res.status(400).json({ error: error.details[0].message });
     }
 
-    const { email, password } = value;
+    const { email, password, force_logout } = value;
 
-    // Note: In a multi-tenant system, email + tenant usually defines a unique user.
-    // If users can belong to multiple tenants, we might need tenant_id here too.
     const result = await pool.query(
-      'SELECT id, name, email, role, tenant_id, password_hash FROM users WHERE email = $1',
+      'SELECT id, name, email, role, tenant_id, password_hash, current_session_token, last_login_at FROM users WHERE email = $1',
       [email]
     );
     const user = result.rows[0];
@@ -117,12 +122,38 @@ router.post('/login', async (req, res, next) => {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    const { password_hash, ...safeUser } = user;
+    if (user.current_session_token && !force_logout) {
+      return res.status(409).json({ 
+        error: 'Already logged in on another device',
+        active_session_exists: true,
+        last_login_at: user.last_login_at 
+      });
+    }
+
+    const sessionToken = require('crypto').randomUUID();
+    
+    await pool.query(
+      'UPDATE users SET current_session_token = $1, last_login_at = NOW() WHERE id = $2',
+      [sessionToken, user.id]
+    );
+
+    const { password_hash, current_session_token, last_login_at, ...safeUser } = user;
+    
     res.json({ 
       status: 'success',
       user: safeUser, 
-      token: signToken(safeUser) 
+      token: signToken(safeUser, sessionToken) 
     });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /api/auth/logout
+router.post('/logout', authMiddleware, async (req, res, next) => {
+  try {
+    await pool.query('UPDATE users SET current_session_token = NULL WHERE id = $1', [req.user.id]);
+    res.json({ status: 'success', message: 'Logged out successfully' });
   } catch (err) {
     next(err);
   }
