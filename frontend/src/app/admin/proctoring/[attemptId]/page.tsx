@@ -18,8 +18,16 @@ export default function ProctoringPage() {
       .catch((err) => setError(err.response?.data?.error || 'Failed to load attempt data.'));
   }, [attemptId]);
 
-  if (error) return <div className="min-h-screen flex items-center justify-center p-6"><div className="panel max-w-md p-8 text-center"><p className="text-red-500 font-semibold mb-4">{error}</p><button onClick={() => router.push('/admin/exams')} className="btn btn-primary">Back to Admin</button></div></div>;
-  if (!data) return <div className="min-h-screen flex items-center justify-center font-mono animate-pulseText text-muted">Loading Stream...</div>;
+  if (error) return <div className="flex items-center justify-center p-12"><div className="panel max-w-md p-8 text-center"><p className="text-red-500 font-semibold mb-4">{error}</p><button onClick={() => router.push('/admin/exams')} className="btn btn-primary">Back to Admin</button></div></div>;
+  if (!data) return (
+    <div className="p-6 md:p-12 space-y-8 max-w-5xl mx-auto animate-pulse">
+      <div className="h-8 bg-panel-hover rounded w-1/3 mb-8"></div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="md:col-span-2 h-[400px] bg-panel-hover rounded-xl border border-themeBorder"></div>
+        <div className="h-[400px] bg-panel-hover rounded-xl border border-themeBorder"></div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="max-w-4xl mx-auto p-6 md:p-12 animate-fadeIn space-y-8">
