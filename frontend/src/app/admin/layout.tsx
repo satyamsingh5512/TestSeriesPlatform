@@ -20,7 +20,7 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
           {brandLogo ? (
             <img src={brandLogo} alt={brandName} className="w-8 h-8 object-contain" />
           ) : (
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent to-accent-secondary flex items-center justify-center shadow-glow">
+            <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center shadow-crisp">
               <Zap className="w-4 h-4 text-white" />
             </div>
           )}
