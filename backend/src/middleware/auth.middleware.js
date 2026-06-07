@@ -41,12 +41,21 @@ async function authMiddleware(req, res, next) {
 
     next();
   } catch (err) {
-    let message = 'Session expired or invalid. Please log in again.';
-    if (err.name === 'TokenExpiredError') message = 'Session expired. Please log in again.';
-    
-    return res.status(401).json({ 
+    if (err.name === 'TokenExpiredError' || err.name === 'JsonWebTokenError') {
+      let message = 'Session expired or invalid. Please log in again.';
+      if (err.name === 'TokenExpiredError') message = 'Session expired. Please log in again.';
+      
+      return res.status(401).json({ 
+        status: 'error',
+        message 
+      });
+    }
+
+    // It's a DB error or other unexpected error
+    console.error('Auth Middleware Database Error:', err);
+    return res.status(500).json({ 
       status: 'error',
-      message 
+      message: 'Internal server error during authentication.' 
     });
   }
 }
