@@ -3,7 +3,7 @@ import React from 'react';
 import Link from 'next/link';
 import {
   LayoutDashboard, BookOpen, Library, BarChart3, Users, Settings, X,
-  GraduationCap,
+  GraduationCap, ClipboardList,
 } from 'lucide-react';
 
 interface NavItem {
@@ -22,6 +22,7 @@ interface GrowlySidebarProps {
 
 const navItems: NavItem[] = [
   { icon: <LayoutDashboard size={18} />, label: 'Dashboard', href: 'dashboard' },
+  { icon: <ClipboardList size={18} />, label: 'Exams', href: 'exams' },
   { icon: <BookOpen size={18} />, label: 'Learning Paths', href: 'paths' },
   { icon: <Library size={18} />, label: 'Course Library', href: 'library' },
   { icon: <BarChart3 size={18} />, label: 'Analytics', href: 'analytics' },
