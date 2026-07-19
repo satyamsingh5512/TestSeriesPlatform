@@ -81,7 +81,7 @@ export function LoginModal({ isOpen, onClose, onSwitch, onForgotPassword }: any)
 
 export function RegisterModal({ isOpen, onClose, onSwitch }: any) {
   const router = useRouter();
-  const [form, setForm] = useState({ name: '', email: '', password: '', age: '', study_level: '', stream: '', course: '' });
+  const [form, setForm] = useState({ name: '', email: '', password: '', age: '', study_level: '', stream: '', course: '', target_goal: '' });
   const [error, setError] = useState('');
   const { tenant } = useTenant();
   
@@ -130,6 +130,7 @@ export function RegisterModal({ isOpen, onClose, onSwitch }: any) {
                   <div><label className="text-xs font-semibold text-muted block mb-1">Course</label><input type="text" placeholder="e.g. B.Tech" value={form.course} onChange={e => setForm({...form, course: e.target.value})} /></div>
                 </div>
               )}
+              <div><label className="text-xs font-semibold text-muted block mb-1">Target Exam / Goal</label><input type="text" placeholder="e.g. UPSC CSE, JEE Main" value={form.target_goal} onChange={e => setForm({...form, target_goal: e.target.value})} /></div>
               <button type="submit" className="btn btn-primary w-full justify-center py-2.5" style={{ backgroundColor: 'var(--primary, #0f172a)' }}>Join</button>
             </form>
             <p className="text-xs text-muted mt-6 text-center">Member? <button onClick={onSwitch} className="text-accent hover:underline" style={{ color: 'var(--primary, #2563eb)' }}>Sign In</button></p>
