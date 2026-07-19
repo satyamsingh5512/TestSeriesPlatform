@@ -38,7 +38,7 @@ router.get('/exams', async (req, res, next) => {
  * POST /api/admin/exams
  */
 router.post('/exams', async (req, res, next) => {
-  const { title, description, duration_minutes, total_marks, exam_type, sections } = req.body;
+  const { title, description, goal, duration_minutes, total_marks, exam_type, sections } = req.body;
   if (!title || typeof title !== 'string' || title.trim() === '') {
     return res.status(400).json({ error: 'Exam title is mandatory.' });
   }
@@ -50,9 +50,9 @@ router.post('/exams', async (req, res, next) => {
     await client.query('BEGIN');
 
     const examRes = await client.query(
-      `INSERT INTO exams (tenant_id, title, description, duration_minutes, total_marks, exam_type, status)
-       VALUES ($1, $2, $3, $4, $5, $6, 'published') RETURNING id`,
-      [tenant_id, title, description, duration_minutes || 180, total_marks || 0, exam_type || 'fixed']
+      `INSERT INTO exams (tenant_id, title, description, goal, duration_minutes, total_marks, exam_type, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, 'published') RETURNING id`,
+      [tenant_id, title, description, goal || null, duration_minutes || 180, total_marks || 0, exam_type || 'fixed']
     );
     const examId = examRes.rows[0].id;
 
@@ -105,7 +105,7 @@ router.patch('/exams/:id', async (req, res, next) => {
   try {
     const { tenant_id } = req.user;
     const { id } = req.params;
-    const { status, title, description, duration_minutes, total_marks, exam_type } = req.body;
+    const { status, title, description, goal, duration_minutes, total_marks, exam_type } = req.body;
 
     if (status && !['draft', 'published', 'archived'].includes(status)) {
       return res.status(400).json({ error: 'Invalid status' });
@@ -123,10 +123,11 @@ router.patch('/exams/:id', async (req, res, next) => {
            duration_minutes = COALESCE($4, duration_minutes),
            total_marks = COALESCE($5, total_marks),
            exam_type = COALESCE($6, exam_type),
+           goal = COALESCE($7, goal),
            updated_at = NOW()
-       WHERE id = $7 AND tenant_id = $8
+       WHERE id = $8 AND tenant_id = $9
        RETURNING *`,
-      [status, title, description, duration_minutes, total_marks, exam_type, id, tenant_id]
+      [status, title, description, duration_minutes, total_marks, exam_type, goal, id, tenant_id]
     );
 
     if (result.rows.length === 0) return res.status(404).json({ error: 'Exam not found' });
