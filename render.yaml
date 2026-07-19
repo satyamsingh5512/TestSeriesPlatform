@@ -8,14 +8,7 @@ services:
     postgresMajorVersion: 16
 
   # ---------------------------------------------------------
-  # 2. Redis Cache & Queue
-  # ---------------------------------------------------------
-  - type: redis
-    name: edtech-redis
-    plan: free
-
-  # ---------------------------------------------------------
-  # 3. AI Service (Python FastAPI)
+  # 2. AI Service (Python FastAPI)
   # ---------------------------------------------------------
   - type: web
     name: examforge-ai
@@ -26,7 +19,7 @@ services:
     plan: free
 
   # ---------------------------------------------------------
-  # 4. Backend API (Node.js/Docker)
+  # 3. Backend API (Node.js/Docker)
   # ---------------------------------------------------------
   - type: web
     name: examforge-backend
@@ -41,11 +34,6 @@ services:
       - key: DATABASE_URL
         fromDatabase:
           name: edtech-db
-          property: connectionString
-      - key: REDIS_URL
-        fromService:
-          type: redis
-          name: edtech-redis
           property: connectionString
       - key: AI_SERVICE_URL
         fromService:
@@ -63,7 +51,7 @@ services:
           envVarKey: RENDER_EXTERNAL_URL
 
   # ---------------------------------------------------------
-  # 5. Frontend (Next.js)
+  # 4. Frontend (Next.js)
   # ---------------------------------------------------------
   - type: web
     name: examforge-frontend
