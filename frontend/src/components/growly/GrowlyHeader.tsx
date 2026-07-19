@@ -1,63 +1,36 @@
 'use client';
+
 import React from 'react';
-import { Search, Bell, Menu } from 'lucide-react';
+import { Menu, Settings2, Target } from 'lucide-react';
 
 interface GrowlyHeaderProps {
   userName: string;
+  targetGoal: string;
   onMenuClick: () => void;
+  onProfileClick: () => void;
 }
 
-export function GrowlyHeader({ userName, onMenuClick }: GrowlyHeaderProps) {
-  const today = new Date().toLocaleDateString('en-US', {
-    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
-  });
-
+export function GrowlyHeader({ userName, targetGoal, onMenuClick, onProfileClick }: GrowlyHeaderProps) {
   const initials = userName
-    ? userName.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()
-    : 'HR';
+    ? userName.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase()
+    : 'ST';
 
   return (
-    <header className="h-16 flex items-center justify-between px-6 md:px-8 bg-white border-b border-gray-100 sticky top-0 z-20">
-      {/* Left: hamburger (mobile) + greeting */}
-      <div className="flex items-center gap-4">
-        <button
-          onClick={onMenuClick}
-          className="md:hidden p-2 rounded-lg hover:bg-gray-100 text-growly-muted transition-colors"
-          aria-label="Open menu"
-        >
-          <Menu size={20} />
-        </button>
-        <div>
-          <h1 className="text-[15px] font-semibold text-growly-ink leading-tight">
-            Welcome back, <span className="text-growly-blue">{userName || 'Team Lead'}</span>
-          </h1>
-          <p className="text-[12px] text-growly-muted">{today}</p>
-        </div>
+    <header className="sticky top-0 z-20 flex h-[70px] items-center justify-between border-b border-[#E6E9F0] bg-[#F8F9FC]/90 px-5 backdrop-blur-lg sm:px-7 lg:px-9">
+      <div className="flex min-w-0 items-center gap-3">
+        <button onClick={onMenuClick} className="rounded-lg p-2 text-[#5E687D] hover:bg-white hover:text-[#18213A] md:hidden" aria-label="Open navigation"><Menu size={20} /></button>
+        <div className="hidden h-6 w-px bg-[#DDE1EA] sm:block" />
+        {targetGoal ? (
+          <div className="hidden items-center gap-2 text-xs text-[#657085] sm:flex"><Target size={14} className="text-[#A66C14]" /><span className="font-medium">Target:</span><span className="max-w-[260px] truncate font-semibold text-[#25304A]">{targetGoal}</span></div>
+        ) : (
+          <button onClick={onProfileClick} className="hidden text-xs font-semibold text-[#3452A4] hover:text-[#1C2D63] sm:block">Set your target exam</button>
+        )}
       </div>
-
-      {/* Right: Search + Notification + Avatar */}
-      <div className="flex items-center gap-3">
-        {/* Search bar — hidden on small screens */}
-        <div className="hidden sm:flex items-center gap-2 bg-gray-50 border border-gray-100 rounded-full px-4 py-2 w-56">
-          <Search size={14} className="text-growly-muted flex-shrink-0" />
-          <input
-            type="text"
-            placeholder="Search courses, employees…"
-            className="bg-transparent text-[13px] text-growly-ink placeholder:text-growly-muted/70 outline-none w-full"
-          />
-        </div>
-
-        {/* Notification Bell */}
-        <button className="relative p-2 rounded-xl hover:bg-gray-50 transition-colors text-growly-muted hover:text-growly-ink">
-          <Bell size={18} />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-growly-blue border-2 border-white" />
-        </button>
-
-        {/* User avatar */}
-        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-growly-blue to-growly-steel flex items-center justify-center text-white text-[13px] font-semibold cursor-pointer hover:opacity-90 transition-opacity">
-          {initials}
-        </div>
-      </div>
+      <button onClick={onProfileClick} className="group flex items-center gap-2 rounded-xl px-2 py-1.5 text-left transition-colors hover:bg-white focus:outline-none focus:ring-2 focus:ring-[#AABBEA]">
+        <span className="hidden text-right sm:block"><span className="block text-xs font-semibold leading-4 text-[#1A2337]">{userName || 'Student'}</span><span className="block text-[10px] text-[#778196]">Profile settings</span></span>
+        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#1C2D63] text-xs font-bold text-white shadow-[0_4px_10px_rgba(28,45,99,.18)]">{initials}</span>
+        <Settings2 size={15} className="hidden text-[#778196] transition-colors group-hover:text-[#1C2D63] sm:block" />
+      </button>
     </header>
   );
 }
