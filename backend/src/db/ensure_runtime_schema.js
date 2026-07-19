@@ -11,7 +11,16 @@ async function ensureRuntimeSchema() {
         ADD COLUMN IF NOT EXISTS current_session_token TEXT,
         ADD COLUMN IF NOT EXISTS last_login_at TIMESTAMPTZ,
         ADD COLUMN IF NOT EXISTS reset_otp VARCHAR(6),
-        ADD COLUMN IF NOT EXISTS reset_otp_expires_at TIMESTAMPTZ;
+        ADD COLUMN IF NOT EXISTS reset_otp_expires_at TIMESTAMPTZ,
+        ADD COLUMN IF NOT EXISTS age INTEGER,
+        ADD COLUMN IF NOT EXISTS study_level VARCHAR(30),
+        ADD COLUMN IF NOT EXISTS stream VARCHAR(100),
+        ADD COLUMN IF NOT EXISTS course VARCHAR(150);
+    `);
+
+    await client.query(`
+      ALTER TABLE exams
+        ADD COLUMN IF NOT EXISTS goal VARCHAR(150);
     `);
 
     await client.query(`
