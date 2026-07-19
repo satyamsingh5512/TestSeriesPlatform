@@ -1,6 +1,5 @@
 const express = require('express');
 const pool = require('../db/pool');
-const redis = require('../db/redis');
 const authMiddleware = require('../middleware/auth.middleware');
 const roleMiddleware = require('../middleware/role.middleware');
 const axios = require('axios');
@@ -265,9 +264,6 @@ router.patch('/questions/:id', async (req, res, next) => {
     );
 
     if (result.rows.length === 0) return res.status(404).json({ error: 'Question not found' });
-
-    const examId = result.rows[0].exam_id;
-    await redis.del(`exam:${examId}:questions`);
 
     res.json({ status: 'success', question_id: result.rows[0].id });
   } catch (err) { next(err); }
