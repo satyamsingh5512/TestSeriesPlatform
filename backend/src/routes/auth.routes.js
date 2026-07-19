@@ -15,7 +15,11 @@ const registerSchema = Joi.object({
   email: Joi.string().email().required(),
   password: Joi.string().min(8).required(),
   tenant_id: Joi.string().uuid().required(), // All users must belong to a tenant
-  dob: Joi.date().iso().optional()
+  dob: Joi.date().iso().optional(),
+  age: Joi.number().integer().min(5).max(100).optional(),
+  study_level: Joi.string().valid('school', 'undergrad', 'postgrad', 'working', 'other').optional(),
+  stream: Joi.string().max(100).allow('').optional(),
+  course: Joi.string().max(150).allow('').optional()
 });
 
 const loginSchema = Joi.object({
@@ -64,7 +68,7 @@ router.post('/register', async (req, res, next) => {
       return res.status(400).json({ error: error.details[0].message });
     }
 
-    const { name, email, password, tenant_id, dob } = value;
+    const { name, email, password, tenant_id, dob, age, study_level, stream, course } = value;
 
     // Check if tenant exists
     const tenantCheck = await pool.query('SELECT id FROM tenants WHERE id = $1', [tenant_id]);
@@ -85,10 +89,10 @@ router.post('/register', async (req, res, next) => {
     const sessionToken = require('crypto').randomUUID();
     
     const result = await pool.query(
-      `INSERT INTO users (name, email, password_hash, tenant_id, dob, current_session_token, last_login_at)
-       VALUES ($1, $2, $3, $4, $5, $6, NOW())
-       RETURNING id, name, email, role, tenant_id, created_at`,
-      [name, email, password_hash, tenant_id, dob || null, sessionToken]
+      `INSERT INTO users (name, email, password_hash, tenant_id, dob, age, study_level, stream, course, current_session_token, last_login_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW())
+       RETURNING id, name, email, role, tenant_id, age, study_level, stream, course, created_at`,
+      [name, email, password_hash, tenant_id, dob || null, age || null, study_level || null, stream || null, course || null, sessionToken]
     );
 
     const user = result.rows[0];
@@ -235,7 +239,7 @@ router.post('/reset-password', async (req, res, next) => {
 router.get('/me', authMiddleware, async (req, res, next) => {
   try {
     const result = await pool.query(
-      'SELECT id, name, email, role, tenant_id, dob, created_at FROM users WHERE id = $1',
+      'SELECT id, name, email, role, tenant_id, dob, age, study_level, stream, course, created_at FROM users WHERE id = $1',
       [req.user.id]
     );
     if (!result.rows.length) return res.status(404).json({ error: 'User not found' });
