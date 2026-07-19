@@ -1,241 +1,138 @@
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Nunito+Sans:opsz,wght@6..12,400;500;600;700;800&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  /* Elevated Dub.co Aesthetic - Deep Atmospheric Purple-Black */
-  /* Near-black charcoal blending into deep violet */
-  --bg-base:         #07050A; 
-  /* Refined Glassmorphism - translucent dark surface */
-  --bg-panel:        rgba(22, 16, 36, 0.4); 
-  --bg-panel-hover:  rgba(35, 25, 55, 0.55);
-  --bg-glow:         rgba(139, 92, 246, 0.08);
-
-  /* High contrast foreground elements for clear legibility against dark glass */
-  --text-primary:    #F8F7FA;
-  --text-muted:      #A59EBA;
-  --text-highlight:  #FFFFFF;
-
-  /* Luxurious Accent - Violet and Aubergine */
-  --accent:          #8B5CF6; 
-  --accent-secondary: #A78BFA;
-  --accent-hover:    #7C3AED;
-
-  /* Delicate borders and soft highlights */
-  --border:          rgba(255, 255, 255, 0.06);
-  --border-focus:    rgba(139, 92, 246, 0.5);
-
-  --error:           #F43F5E;
-  --success:         #10B981;
-  --warning:         #F59E0B;
-
-  /* Premium Typography Combination */
-  --font-body:       'Nunito Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-display:    'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-mono:       ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-
-  /* Generous, soft rounded corners */
-  --radius-sm:       8px;
-  --radius-md:       16px;
-  --radius-lg:       24px;
-  --radius-pill:     9999px;
+@layer base {
+  :root {
+    /* Minimalist Modern Aesthetic Design Tokens */
+    --bg-base: #FAFAFA;
+    --bg-panel: #FFFFFF;
+    --bg-panel-hover: #F1F5F9;
+    
+    --text-primary: #0F172A;
+    --text-muted: #64748B;
+    --text-highlight: #0F172A;
+    
+    --accent: #0052FF; 
+    --accent-secondary: #4D7CFF;
+    --accent-hover: #0043D9;
+    
+    --border: #E2E8F0;
+    --border-focus: #0052FF;
+    
+    --error: #EF4444;
+    --success: #10B981;
+    --warning: #F59E0B;
+    --info: #3B82F6;
+    
+    --font-body: var(--font-inter), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font-display: var(--font-calistoga), Georgia, serif;
+    --font-mono: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  }
 }
 
-body.light-theme {
-  /* Refined elegant light mode with slight warm/purple tint */
-  --bg-base:         #FCFBFF;
-  --bg-panel:        rgba(255, 255, 255, 0.7);
-  --bg-panel-hover:  rgba(255, 255, 255, 0.95);
-  --bg-glow:         rgba(139, 92, 246, 0.04);
-
-  --text-primary:    #0F0D15;
-  --text-muted:      #6B6580;
-  --text-highlight:  #000000;
-
-  --accent:          #7C3AED;
-  --accent-secondary: #6D28D9;
-  --accent-hover:    #5B21B6;
-
-  --border:          rgba(0, 0, 0, 0.06);
-  --border-focus:    rgba(124, 58, 237, 0.4);
+body.dark-theme {
+  --bg-base: #0B0F19;
+  --bg-panel: #1E293B;
+  --bg-panel-hover: #334155;
+  
+  --text-primary: #F8FAFC;
+  --text-muted: #94A3B8;
+  --text-highlight: #FFFFFF;
+  
+  --accent: #0052FF;
+  --accent-secondary: #4D7CFF;
+  --accent-hover: #3B82F6;
+  
+  --border: #334155;
+  --border-focus: #3B82F6;
 }
 
-body {
-  background-color: var(--bg-base);
-  font-family: var(--font-body);
-  color: var(--text-primary);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  min-height: 100vh;
-  /* Cinematic Atmospheric Lighting - Deep Violet & Aubergine Blooms */
-  background-image: 
-    radial-gradient(circle at 15% 0%, rgba(109, 40, 217, 0.12) 0%, transparent 40%),
-    radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.08) 0%, transparent 50%),
-    radial-gradient(circle at 50% 100%, rgba(67, 56, 202, 0.1) 0%, transparent 60%);
-  background-attachment: fixed;
+@layer base {
+  body {
+    background-color: var(--bg-base);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    min-height: 100vh;
+  }
+
+  h1, h2 {
+    font-family: var(--font-display);
+    color: var(--text-highlight);
+    letter-spacing: -0.02em;
+    font-weight: normal;
+  }
+  h3, h4, h5, h6 {
+    font-family: var(--font-body);
+    color: var(--text-highlight);
+    letter-spacing: -0.01em;
+    font-weight: 600;
+  }
 }
 
-/* Premium Typography System */
-h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-display);
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  color: var(--text-highlight);
+@layer components {
+  /* Minimalist Modern utilities */
+  .gradient-text {
+    background: linear-gradient(to right, #0052FF, #4D7CFF);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .gradient-underline {
+    position: absolute;
+    bottom: -0.25rem;
+    left: 0;
+    height: 0.75rem;
+    width: 100%;
+    border-radius: 0.125rem;
+    background: linear-gradient(to right, rgba(0, 82, 255, 0.15), rgba(77, 124, 255, 0.1));
+  }
+
+  .dot-pattern {
+    background-image: radial-gradient(circle, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+
+  .light-dot-pattern {
+    background-image: radial-gradient(circle, rgba(15, 23, 42, 0.03) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+
+  /* Crisp, structural panel matching the design tokens */
+  .struct-panel {
+    @apply bg-[var(--bg-panel)] border border-[var(--border)] shadow-[0_4px_6px_rgba(0,0,0,0.03)] rounded-xl transition-all duration-300;
+  }
+
+  .struct-panel:hover {
+    @apply shadow-[0_12px_24px_rgba(0,0,0,0.06)] -translate-y-0.5 border-[rgba(0,82,255,0.2)];
+  }
+
+  .bento-grid {
+    @apply grid grid-cols-1 md:grid-cols-3 gap-6 auto-rows-min;
+  }
 }
 
-h1 {
-  font-size: clamp(2.5rem, 4vw, 4rem);
-  line-height: 1.1;
-  letter-spacing: -0.03em;
+/* Base custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
 }
-
-/* Refined Glassmorphism - Luxurious Floating Panels */
-.panel {
-  background: var(--bg-panel);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  /* Soft blur for atmospheric depth without losing readability */
-  backdrop-blur: 24px;
-  -webkit-backdrop-filter: blur(24px);
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-  /* Smoother, dimensional shadow */
-  box-shadow: 
-    0 4px 24px -2px rgba(0, 0, 0, 0.2),
-    inset 0 1px 1px rgba(255, 255, 255, 0.08);
-  position: relative;
-  overflow: hidden;
+::-webkit-scrollbar-track {
+  background: transparent;
 }
-
-/* Gentle Card Lift & Glow on Hover */
-.panel:hover {
-  background: var(--bg-panel-hover);
-  border-color: rgba(255, 255, 255, 0.15);
-  transform: translateY(-4px);
-  box-shadow: 
-    0 16px 40px -8px rgba(0, 0, 0, 0.4),
-    0 0 30px -5px var(--bg-glow),
-    inset 0 1px 1px rgba(255, 255, 255, 0.12);
+::-webkit-scrollbar-thumb {
+  background: #cccccc;
+  border-radius: 3px;
 }
-
-/* Elegant Buttons with Subtle Glow & Tactile Feel */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 10px 22px;
-  border-radius: var(--radius-pill);
-  font-family: var(--font-body);
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.03);
-  color: var(--text-primary);
-  backdrop-blur: 12px;
-  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.05);
+::-webkit-scrollbar-thumb:hover {
+  background: #999999;
 }
-
-.btn:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.2);
-  color: var(--text-highlight);
-  transform: translateY(-1px);
-  box-shadow: 
-    inset 0 1px 1px rgba(255, 255, 255, 0.1),
-    0 4px 12px rgba(0, 0, 0, 0.2);
+.dark-theme ::-webkit-scrollbar-thumb {
+  background: #333333;
 }
-
-.btn-primary {
-  background: linear-gradient(180deg, var(--accent-secondary) 0%, var(--accent) 100%);
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 
-    inset 0 1px 1px rgba(255, 255, 255, 0.3), 
-    0 2px 10px rgba(139, 92, 246, 0.2);
-}
-
-.btn-primary:hover:not(:disabled) {
-  background: linear-gradient(180deg, var(--accent) 0%, var(--accent-hover) 100%);
-  color: white;
-  border-color: rgba(255, 255, 255, 0.2);
-  box-shadow: 
-    inset 0 1px 1px rgba(255, 255, 255, 0.4), 
-    0 6px 20px rgba(139, 92, 246, 0.4);
-}
-
-.btn:active:not(:disabled) {
-  transform: scale(0.97);
-}
-
-/* Intelligent Input Fields - Luxurious Depth */
-input, select, textarea {
-  width: 100%;
-  padding: 12px 16px;
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  color: var(--text-primary);
-  font-family: var(--font-body);
-  font-size: 15px;
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  outline: none;
-  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.2);
-}
-
-input:focus, select:focus, textarea:focus {
-  border-color: var(--accent);
-  background: rgba(139, 92, 246, 0.05);
-  box-shadow: 
-    inset 0 2px 6px rgba(0, 0, 0, 0.1),
-    0 0 0 3px rgba(139, 92, 246, 0.2);
-}
-
-/* Pill-shaped Status Tags */
-.status-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 12px;
-  border-radius: var(--radius-pill);
-  font-size: 12px;
-  font-weight: 600;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--border);
-  color: var(--text-muted);
-  backdrop-blur: 8px;
-}
-
-.status-active { 
-  background: rgba(139, 92, 246, 0.15);
-  border-color: rgba(139, 92, 246, 0.3);
-  color: var(--accent-secondary);
-  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.05);
-}
-
-.status-success {
-  background: rgba(16, 185, 129, 0.1);
-  border-color: rgba(16, 185, 129, 0.3);
-  color: var(--success);
-}
-
-/* Progressive Loading State (Skeletons) - Smooth Drifting Light */
-.skeleton {
-  background: linear-gradient(
-    90deg,
-    rgba(255, 255, 255, 0.02) 25%,
-    rgba(255, 255, 255, 0.06) 50%,
-    rgba(255, 255, 255, 0.02) 75%
-  );
-  background-size: 200% 100%;
-  animation: shimmer 2.5s infinite ease-in-out;
-  border-radius: var(--radius-sm);
-}
-
-@keyframes shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+.dark-theme ::-webkit-scrollbar-thumb:hover {
+  background: #555555;
 }
