@@ -36,7 +36,7 @@ router.get('/recommended', async (req, res, next) => {
     const { tenant_id, id: user_id } = req.user;
 
     const userRes = await pool.query(
-      'SELECT age, study_level, stream, course FROM users WHERE id = $1',
+      'SELECT age, study_level, stream, course, target_goal FROM users WHERE id = $1',
       [user_id]
     );
     const profile = userRes.rows[0] || {};
@@ -77,6 +77,9 @@ router.get('/recommended', async (req, res, next) => {
       if (profile.stream && text.includes(norm(profile.stream))) score += 3;
       if (profile.course && text.includes(norm(profile.course))) score += 3;
 
+      // Strongest signal: the student's own stated target exam/goal
+      if (profile.target_goal && text.includes(norm(profile.target_goal))) score += 5;
+
       // Study-level keyword heuristics
       const kws = keywordsFor(profile.study_level);
       for (const kw of kws) {
@@ -98,7 +101,7 @@ router.get('/recommended', async (req, res, next) => {
 
     // If the profile is incomplete or nothing scored, fall back to showing
     // all published exams (most recent first) rather than an empty list.
-    const hasProfile = profile.study_level || profile.stream || profile.course || profile.age;
+    const hasProfile = profile.study_level || profile.stream || profile.course || profile.age || profile.target_goal;
     const recommended = hasProfile ? ranked.filter((e) => e.match_score > 0) : ranked;
 
     res.json({
@@ -108,6 +111,7 @@ router.get('/recommended', async (req, res, next) => {
         study_level: profile.study_level || null,
         stream: profile.stream || null,
         course: profile.course || null,
+        target_goal: profile.target_goal || null,
       },
       exams: (recommended.length ? recommended : ranked).slice(0, 20),
     });
