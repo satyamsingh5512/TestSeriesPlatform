@@ -19,6 +19,30 @@ export default {
         error: 'var(--error)',
         success: 'var(--success)',
         warning: 'var(--warning)',
+        
+        // shadcn compatibility mapping
+        background: 'var(--bg-base)',
+        foreground: 'var(--text-primary)',
+        'muted-foreground': 'var(--text-muted)',
+        'primary-foreground': 'var(--bg-base)',
+        'secondary': 'var(--bg-panel)',
+        'secondary-foreground': 'var(--text-primary)',
+        'accent-foreground': 'var(--text-primary)',
+        'border': 'var(--border)',
+        'input': 'var(--border)',
+        'ring': 'var(--border-focus)',
+
+        // Growly LMS brand tokens
+        'growly-bg': '#FAFBFB',
+        'growly-card': '#FFFFFF',
+        'growly-ink': '#06070B',
+        'growly-muted': '#7593A1',
+        'growly-blue': '#003799',
+        'growly-steel': '#3D73B6',
+        'growly-sage': '#B7C5BC',
+        'growly-sage-light': '#E8F0EB',
+        'growly-blue-light': '#EEF3FF',
+        'growly-blue-mid': '#D6E0FF',
       },
       fontFamily: {
         sans: ['var(--font-body)'],
