@@ -79,8 +79,7 @@ async function startServer() {
   try {
     await ensureRuntimeSchema();
 
-    // Start Background Jobs & Workers after schema is safe to query.
-    require('./workers/response.worker');
+    // Start PostgreSQL-backed maintenance jobs after schema is safe to query.
     const { startConsentJob } = require('./jobs/consent.job');
     const { startPurgeJob } = require('./jobs/purge.job');
     startConsentJob();
