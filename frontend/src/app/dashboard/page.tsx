@@ -1,119 +1,314 @@
 'use client';
-import React, { useEffect, useState, Suspense } from 'react';
+
+import React, { Suspense, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import axios from 'axios';
-import {
-  Users, TrendingUp, Clock, Layers, LogOut, ChevronRight,
-} from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
+import {
+  ArrowUpRight,
+  BarChart3,
+  BookOpenCheck,
+  CalendarDays,
+  ChevronRight,
+  CircleDot,
+  Clock3,
+  Play,
+  Target,
+  Trophy,
+} from 'lucide-react';
 
 import { GrowlySidebar } from '@/components/growly/GrowlySidebar';
 import { GrowlyHeader } from '@/components/growly/GrowlyHeader';
-import { MetricCard } from '@/components/growly/MetricCard';
-import { SkillProgressionChart } from '@/components/growly/SkillProgressionChart';
-import { DepartmentCompletionChart } from '@/components/growly/DepartmentCompletionChart';
-import { SkillMatrix } from '@/components/growly/SkillMatrix';
-import { CourseLibrary } from '@/components/growly/CourseLibrary';
-import { PlaceholderView } from '@/components/growly/PlaceholderView';
 import { RecommendedExams } from '@/components/growly/RecommendedExams';
 import { ProfileSettings } from '@/components/growly/ProfileSettings';
 
-// Sparkline seeds (static demo data)
-const SPARKLINES = {
-  learners:    [900, 980, 1050, 1100, 1180, 1240],
-  completion:  [65, 68, 72, 74, 76, 78],
-  hours:       [3100, 3400, 3700, 4000, 4200, 4500],
-  paths:       [24, 26, 27, 29, 31, 32],
+type DashboardNav = 'command' | 'practice' | 'performance' | 'settings';
+
+type Attempt = {
+  id: string;
+  exam_id: string;
+  exam_title: string;
+  duration_minutes: number;
+  status: 'in_progress' | 'submitted' | 'flagged' | 'cancelled';
+  total_score: number | string | null;
+  percentile: number | string | null;
+  started_at: string;
+  submitted_at: string | null;
 };
 
-const fadeInUp = {
-  hidden: { opacity: 0, y: 16 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] as const } },
+type RecommendedExam = {
+  id: string;
+  title: string;
+  goal: string | null;
+  duration_minutes: number;
+  total_marks: number;
 };
 
-const stagger = {
-  hidden: {},
-  visible: { transition: { staggerChildren: 0.07 } },
+const pageCopy: Record<DashboardNav, { eyebrow: string; title: string; description: string }> = {
+  command: {
+    eyebrow: 'Command centre',
+    title: 'Your preparation, in focus.',
+    description: 'Use your latest practice signals to decide what to do next.',
+  },
+  practice: {
+    eyebrow: 'Practice library',
+    title: 'Matched practice sets.',
+    description: 'Published exams selected against your target and study profile.',
+  },
+  performance: {
+    eyebrow: 'Performance',
+    title: 'Attempt ledger.',
+    description: 'A clear record of submitted and in-progress practice.',
+  },
+  settings: {
+    eyebrow: 'Profile',
+    title: 'Shape your study profile.',
+    description: 'Your target and study details improve your exam matches.',
+  },
 };
 
-type NavInfo = { title: string; desc: string };
-
-const navTitles: { [key: string]: NavInfo } = {
-  exams:     { title: 'Exams',           desc: 'Exams recommended for your profile — jump in and start.' },
-  paths:     { title: 'Learning Paths',  desc: 'Manage and track custom learning paths for your teams.' },
-  library:   { title: 'Course Library',  desc: 'Browse the full catalogue of available courses.' },
-  analytics: { title: 'Analytics',       desc: 'Deep-dive into team performance trends and learning velocity.' },
-  employees: { title: 'Employees',       desc: 'Manage employee profiles, roles and learning assignments.' },
-  settings:  { title: 'Settings',        desc: 'Configure workspace preferences, notifications and integrations.' },
+const reveal = {
+  hidden: { opacity: 0, y: 14 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.38, ease: [0.16, 1, 0.3, 1] as const } },
 };
 
-function GrowlyDashboardView({ user, stats }: { user: any; stats: any }) {
+function value(value: number | string | null | undefined, fallback = '—') {
+  if (value === null || value === undefined || value === '') return fallback;
+  const numberValue = Number(value);
+  return Number.isFinite(numberValue) ? numberValue.toLocaleString(undefined, { maximumFractionDigits: 1 }) : String(value);
+}
+
+function percent(value: number | string | null | undefined) {
+  if (value === null || value === undefined || value === '') return null;
+  const numberValue = Number(value);
+  return Number.isFinite(numberValue) ? Math.max(0, Math.min(100, Math.round(numberValue))) : null;
+}
+
+function dateLabel(date: string | null) {
+  if (!date) return 'Not submitted';
+  return new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(date));
+}
+
+function studyLabel(user: any) {
+  const parts = [user?.study_level && user.study_level.replace(/\b\w/g, (letter: string) => letter.toUpperCase()), user?.course || user?.stream].filter(Boolean);
+  return parts.length ? parts.join(' · ') : 'Study profile incomplete';
+}
+
+function ReadinessDial({ percentile }: { percentile: number | null }) {
+  const progress = percentile ?? 0;
+  const dashOffset = 226 - (226 * progress) / 100;
+
   return (
-    <motion.div variants={stagger} initial="hidden" animate="visible" className="space-y-6">
-      {/* ── Metric Cards Row ────────────────────────────────── */}
-      <motion.div variants={fadeInUp} className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
-        <MetricCard
-          label="Total Learners"
-          value={stats?.total_learners ?? 1240}
-          subtext="Active this month"
-          trend="up"
-          trendValue="+6.2%"
-          icon={Users}
-          iconBg="bg-growly-blue-light"
-          iconColor="text-growly-blue"
-          sparkline={SPARKLINES.learners}
+    <div className="relative flex h-36 w-36 items-center justify-center" aria-label={percentile === null ? 'No percentile baseline yet' : `${percentile} percentile baseline`}>
+      <svg viewBox="0 0 88 88" className="h-full w-full -rotate-90" aria-hidden="true">
+        <circle cx="44" cy="44" r="36" fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="4" />
+        <circle
+          cx="44"
+          cy="44"
+          r="36"
+          fill="none"
+          stroke="#E7B45B"
+          strokeWidth="4"
+          strokeLinecap="round"
+          strokeDasharray="226"
+          strokeDashoffset={dashOffset}
+          className="transition-[stroke-dashoffset] duration-700"
         />
-        <MetricCard
-          label="Avg. Completion Rate"
-          value={`${stats?.avg_completion ?? 78}%`}
-          subtext="Across all paths"
-          trend="up"
-          trendValue="+3.1%"
-          icon={TrendingUp}
-          iconBg="bg-growly-sage-light"
-          iconColor="text-green-700"
-          sparkline={SPARKLINES.completion}
-        />
-        <MetricCard
-          label="Total Training Hours"
-          value={(stats?.total_hours ?? '4,500').toLocaleString?.() ?? '4,500'}
-          subtext="Last 6 months"
-          trend="up"
-          trendValue="+12.4%"
-          icon={Clock}
-          iconBg="bg-blue-50"
-          iconColor="text-growly-steel"
-          sparkline={SPARKLINES.hours}
-        />
-        <MetricCard
-          label="Active Learning Paths"
-          value={stats?.active_paths ?? 32}
-          subtext="3 added this week"
-          trend="up"
-          trendValue="+2"
-          icon={Layers}
-          iconBg="bg-purple-50"
-          iconColor="text-purple-600"
-          sparkline={SPARKLINES.paths}
-        />
-      </motion.div>
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+        <span className="font-mono text-2xl font-medium tracking-[-0.08em] text-white">{percentile ?? '—'}</span>
+        <span className="mt-1 text-[9px] font-semibold uppercase tracking-[0.16em] text-slate-400">percentile</span>
+      </div>
+    </div>
+  );
+}
 
-      {/* ── Main Charts Row ──────────────────────────────────── */}
-      <motion.div variants={fadeInUp} className="grid grid-cols-1 xl:grid-cols-12 gap-5">
-        {/* Bar chart – 8 cols */}
-        <div className="xl:col-span-8">
-          <SkillProgressionChart />
-        </div>
-        {/* Radial chart – 4 cols */}
-        <div className="xl:col-span-4">
-          <DepartmentCompletionChart />
-        </div>
-      </motion.div>
+function SignalCard({ label, metric, detail, icon: Icon }: { label: string; metric: string; detail: string; icon: React.ElementType }) {
+  return (
+    <div className="rounded-2xl border border-[#E6E9F0] bg-white p-4 shadow-[0_1px_1px_rgba(15,23,42,0.02)]">
+      <div className="mb-5 flex items-center justify-between">
+        <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#6E7789]">{label}</span>
+        <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#F3F5FB] text-[#334FA2]"><Icon size={14} strokeWidth={2.2} /></span>
+      </div>
+      <p className="font-mono text-2xl font-medium tracking-[-0.06em] text-[#11182D]">{metric}</p>
+      <p className="mt-1 text-xs leading-5 text-[#788196]">{detail}</p>
+    </div>
+  );
+}
 
-      {/* ── Bottom Row ────────────────────────────────────────── */}
-      <motion.div variants={fadeInUp} className="grid grid-cols-1 xl:grid-cols-2 gap-5">
-        <SkillMatrix />
-        <CourseLibrary />
+function StatusPill({ status }: { status: Attempt['status'] }) {
+  const copy: Record<Attempt['status'], string> = {
+    in_progress: 'In progress',
+    submitted: 'Submitted',
+    flagged: 'Flagged',
+    cancelled: 'Cancelled',
+  };
+  const colors: Record<Attempt['status'], string> = {
+    in_progress: 'bg-[#FFF5E1] text-[#9A6112] ring-[#F5D9A0]',
+    submitted: 'bg-[#EAF7F0] text-[#25704A] ring-[#BCE4CD]',
+    flagged: 'bg-[#FFF0EE] text-[#B4473D] ring-[#F4C6C1]',
+    cancelled: 'bg-[#F2F3F6] text-[#687184] ring-[#E1E3E8]',
+  };
+
+  return <span className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.09em] ring-1 ring-inset ${colors[status]}`}>{copy[status]}</span>;
+}
+
+function AttemptRows({ attempts, onOpen }: { attempts: Attempt[]; onOpen: (attempt: Attempt) => void }) {
+  if (!attempts.length) {
+    return <p className="px-5 py-9 text-center text-sm text-[#788196]">Your completed and in-progress attempts will appear here.</p>;
+  }
+
+  return (
+    <div className="divide-y divide-[#EAECF1]">
+      {attempts.map((attempt) => (
+        <button key={attempt.id} onClick={() => onOpen(attempt)} className="group flex w-full items-center gap-3 px-5 py-4 text-left transition-colors hover:bg-[#F8F9FC]">
+          <span className="flex h-9 w-9 flex-none items-center justify-center rounded-xl bg-[#F3F5FB] text-[#344FA5]"><BookOpenCheck size={16} /></span>
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-sm font-semibold text-[#192136]">{attempt.exam_title || 'Untitled exam'}</span>
+            <span className="mt-0.5 block text-xs text-[#788196]">{attempt.status === 'submitted' ? dateLabel(attempt.submitted_at) : `Started ${dateLabel(attempt.started_at)}`}</span>
+          </span>
+          <span className="hidden text-right sm:block">
+            <span className="block font-mono text-sm font-medium text-[#1A2337]">{attempt.status === 'submitted' ? `${value(attempt.total_score)} pts` : 'Resume'}</span>
+            <span className="text-[11px] text-[#788196]">{attempt.status === 'submitted' && percent(attempt.percentile) !== null ? `${percent(attempt.percentile)} percentile` : `${attempt.duration_minutes || '—'} min`}</span>
+          </span>
+          <ChevronRight size={16} className="text-[#A5ADBC] transition-transform group-hover:translate-x-0.5" />
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function DashboardOverview({ user, stats, attempts, exams, onNavigate, onOpenAttempt }: {
+  user: any;
+  stats: any;
+  attempts: Attempt[];
+  exams: RecommendedExam[];
+  onNavigate: (view: DashboardNav) => void;
+  onOpenAttempt: (attempt: Attempt) => void;
+}) {
+  const activeAttempt = attempts.find((attempt) => attempt.status === 'in_progress');
+  const recentAttempts = attempts.slice(0, 4);
+  const percentile = percent(stats?.avg_percentile);
+  const target = user?.target_goal || 'Choose your target exam';
+  const isProfileComplete = Boolean(user?.target_goal && user?.study_level);
+  const nextAction = activeAttempt
+    ? { eyebrow: 'Resume your session', title: activeAttempt.exam_title, body: 'Your attempt is still open. Continue from where you stopped.', action: 'Resume attempt', click: () => onOpenAttempt(activeAttempt) }
+    : !stats?.total_exams
+      ? { eyebrow: 'Build your baseline', title: 'Take your first diagnostic', body: 'A completed attempt creates the performance baseline for this workspace.', action: 'Browse practice', click: () => onNavigate('practice') }
+      : !isProfileComplete
+        ? { eyebrow: 'Improve your matching', title: 'Complete your profile', body: 'Tell us your target and study stage to refine recommended practice.', action: 'Update profile', click: () => onNavigate('settings') }
+        : { eyebrow: 'Keep the momentum', title: 'Choose the next practice set', body: 'Your matches are ranked around the target you selected.', action: 'View matches', click: () => onNavigate('practice') };
+
+  return (
+    <motion.div initial="hidden" animate="visible" className="space-y-5">
+      <motion.section variants={reveal} className="relative isolate overflow-hidden rounded-3xl bg-[#111A36] px-5 py-6 text-white shadow-[0_20px_45px_rgba(17,26,54,0.16)] sm:px-7 sm:py-7">
+        <div className="pointer-events-none absolute inset-0 opacity-[0.18] [background-image:linear-gradient(rgba(255,255,255,.12)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.12)_1px,transparent_1px)] [background-size:28px_28px]" />
+        <div className="pointer-events-none absolute -right-16 -top-24 h-56 w-56 rounded-full border border-[#E7B45B]/25" />
+        <div className="pointer-events-none absolute -right-4 -top-12 h-32 w-32 rounded-full border border-[#E7B45B]/20" />
+        <div className="relative grid gap-7 md:grid-cols-[1fr_auto] md:items-center">
+          <div>
+            <div className="mb-5 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.18em] text-[#C8D1E8]"><Target size={13} className="text-[#E7B45B]" /> Target dossier</div>
+            <h2 className="max-w-xl font-display text-3xl leading-[1.08] tracking-[-0.03em] text-white sm:text-4xl">{target}</h2>
+            <p className="mt-3 max-w-xl text-sm leading-6 text-[#BBC5DC]">{studyLabel(user)}{user?.age ? ` · Age ${user.age}` : ''}</p>
+            <button onClick={() => onNavigate(isProfileComplete ? 'practice' : 'settings')} className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#E7B45B] px-4 py-2.5 text-xs font-bold text-[#1B2133] transition-colors hover:bg-[#F0C673] focus:outline-none focus:ring-2 focus:ring-white/70">
+              {isProfileComplete ? 'Explore matched practice' : 'Complete your study profile'} <ArrowUpRight size={14} />
+            </button>
+          </div>
+          <div className="flex items-center gap-4 rounded-2xl border border-white/[0.11] bg-white/[0.06] p-3 pr-5 backdrop-blur-sm">
+            <ReadinessDial percentile={percentile} />
+            <div className="max-w-[120px]">
+              <p className="text-xs font-semibold text-white">Your baseline</p>
+              <p className="mt-1 text-xs leading-5 text-[#BBC5DC]">{percentile === null ? 'Finish an attempt to establish your percentile.' : 'Average percentile across submitted attempts.'}</p>
+            </div>
+          </div>
+        </div>
+      </motion.section>
+
+      <motion.section variants={reveal} className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <SignalCard label="Attempts" metric={value(stats?.total_exams, '0')} detail="Submitted practice exams" icon={BookOpenCheck} />
+        <SignalCard label="Average score" metric={stats?.avg_score == null ? '—' : value(stats.avg_score)} detail="Across submitted attempts" icon={Trophy} />
+        <SignalCard label="Percentile" metric={percentile === null ? '—' : `${percentile}`} detail="Average standing so far" icon={BarChart3} />
+        <SignalCard label="Open sessions" metric={String(attempts.filter((attempt) => attempt.status === 'in_progress').length)} detail="Attempt ready to resume" icon={Clock3} />
+      </motion.section>
+
+      <motion.section variants={reveal} className="grid gap-5 xl:grid-cols-[1.05fr_.95fr]">
+        <div className="overflow-hidden rounded-2xl border border-[#E6E9F0] bg-white">
+          <div className="flex items-start justify-between gap-4 border-b border-[#EAECF1] px-5 py-5">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#6E7789]">Next move</p>
+              <h3 className="mt-1 text-lg font-semibold tracking-[-0.025em] text-[#151D31]">{nextAction.title}</h3>
+            </div>
+            <span className="flex h-9 w-9 flex-none items-center justify-center rounded-xl bg-[#FFF5E1] text-[#A66C14]"><CircleDot size={17} /></span>
+          </div>
+          <div className="px-5 py-5">
+            <p className="text-sm leading-6 text-[#6D778B]">{nextAction.body}</p>
+            <button onClick={nextAction.click} className="mt-5 inline-flex items-center gap-2 rounded-xl bg-[#1C2D63] px-4 py-2.5 text-xs font-bold text-white transition-colors hover:bg-[#273D83] focus:outline-none focus:ring-2 focus:ring-[#7489CE]">
+              {nextAction.action} <ChevronRight size={14} />
+            </button>
+          </div>
+        </div>
+
+        <div className="overflow-hidden rounded-2xl border border-[#E6E9F0] bg-white">
+          <div className="flex items-center justify-between border-b border-[#EAECF1] px-5 py-5">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#6E7789]">Recent activity</p>
+              <h3 className="mt-1 text-lg font-semibold tracking-[-0.025em] text-[#151D31]">Attempt ledger</h3>
+            </div>
+            <button onClick={() => onNavigate('performance')} className="text-xs font-bold text-[#3452A4] hover:text-[#1C2D63]">View all</button>
+          </div>
+          <AttemptRows attempts={recentAttempts} onOpen={onOpenAttempt} />
+        </div>
+      </motion.section>
+
+      <motion.section variants={reveal} className="rounded-2xl border border-[#E6E9F0] bg-white p-5">
+        <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#6E7789]">Matched practice</p>
+            <h3 className="mt-1 text-lg font-semibold tracking-[-0.025em] text-[#151D31]">Recommended for your target</h3>
+          </div>
+          <button onClick={() => onNavigate('practice')} className="inline-flex items-center gap-1 text-xs font-bold text-[#3452A4] hover:text-[#1C2D63]">Open library <ChevronRight size={14} /></button>
+        </div>
+        {exams.length ? (
+          <div className="grid gap-3 md:grid-cols-3">
+            {exams.slice(0, 3).map((exam) => (
+              <button key={exam.id} onClick={() => { window.location.assign(`/exam/${exam.id}`); }} className="group rounded-xl border border-[#EAECF1] p-4 text-left transition-all hover:-translate-y-0.5 hover:border-[#C9D2EC] hover:shadow-[0_8px_18px_rgba(18,35,79,0.07)]">
+                <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#7C8495]">{exam.goal || 'Practice exam'}</span>
+                <span className="mt-2 block min-h-10 text-sm font-semibold leading-5 text-[#192136]">{exam.title}</span>
+                <span className="mt-3 flex items-center justify-between text-xs text-[#7A8395]"><span>{exam.duration_minutes} min · {exam.total_marks} marks</span><Play size={13} className="text-[#3855A5] transition-transform group-hover:translate-x-0.5" /></span>
+              </button>
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-xl border border-dashed border-[#DCE1EB] bg-[#FAFBFD] px-5 py-8 text-center">
+            <p className="text-sm font-medium text-[#4F5A70]">No matched exams yet.</p>
+            <button onClick={() => onNavigate('settings')} className="mt-2 text-xs font-bold text-[#3452A4] hover:underline">Complete your profile to improve matching</button>
+          </div>
+        )}
+      </motion.section>
+    </motion.div>
+  );
+}
+
+function PerformanceView({ stats, attempts, onOpenAttempt }: { stats: any; attempts: Attempt[]; onOpenAttempt: (attempt: Attempt) => void }) {
+  const submitted = attempts.filter((attempt) => attempt.status === 'submitted');
+  const bestPercentile = submitted.reduce<number | null>((best, attempt) => {
+    const current = percent(attempt.percentile);
+    return current !== null && (best === null || current > best) ? current : best;
+  }, null);
+
+  return (
+    <motion.div initial="hidden" animate="visible" className="space-y-5">
+      <motion.div variants={reveal} className="grid gap-3 sm:grid-cols-3">
+        <SignalCard label="Submitted" metric={String(submitted.length)} detail="Completed attempts in your ledger" icon={BookOpenCheck} />
+        <SignalCard label="Average score" metric={stats?.avg_score == null ? '—' : value(stats.avg_score)} detail="Across all submitted attempts" icon={Trophy} />
+        <SignalCard label="Best percentile" metric={bestPercentile === null ? '—' : String(bestPercentile)} detail="Within your recent attempt list" icon={BarChart3} />
+      </motion.div>
+      <motion.div variants={reveal} className="overflow-hidden rounded-2xl border border-[#E6E9F0] bg-white">
+        <div className="border-b border-[#EAECF1] px-5 py-5">
+          <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#6E7789]">Practice record</p>
+          <h3 className="mt-1 text-lg font-semibold tracking-[-0.025em] text-[#151D31]">All recent attempts</h3>
+        </div>
+        <AttemptRows attempts={attempts} onOpen={onOpenAttempt} />
       </motion.div>
     </motion.div>
   );
@@ -122,11 +317,12 @@ function GrowlyDashboardView({ user, stats }: { user: any; stats: any }) {
 function DashboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-
   const [user, setUser] = useState<any>(null);
   const [stats, setStats] = useState<any>(null);
+  const [attempts, setAttempts] = useState<Attempt[]>([]);
+  const [exams, setExams] = useState<RecommendedExam[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeNav, setActiveNav] = useState('dashboard');
+  const [activeNav, setActiveNav] = useState<DashboardNav>('command');
   const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
@@ -135,127 +331,72 @@ function DashboardContent() {
       headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
     });
 
-    const consentCode = searchParams.get('consent_callback');
-    const verifyAndLoad = async () => {
+    const load = async () => {
+      const consentCode = searchParams.get('consent_callback');
       if (consentCode) {
         try {
           await api.post('/api/consent/verify', { code: consentCode, dob: '2010-01-01' });
           router.replace('/dashboard');
-        } catch (e) { console.error('Consent verification failed', e); }
+        } catch (error) {
+          console.error('Consent verification failed', error);
+        }
       }
 
-      const [u, s] = await Promise.allSettled([
+      const [profile, performance, recent, recommended] = await Promise.allSettled([
         api.get('/api/auth/me'),
         api.get('/api/attempts/stats'),
+        api.get('/api/attempts/recent'),
+        api.get('/api/exams/recommended'),
       ]);
-      if (u.status === 'fulfilled') setUser(u.value.data.user);
+
+      if (profile.status === 'fulfilled') setUser(profile.value.data.user);
       else router.push('/');
-      if (s.status === 'fulfilled') setStats(s.value.data.stats ?? null);
+      if (performance.status === 'fulfilled') setStats(performance.value.data.stats ?? null);
+      if (recent.status === 'fulfilled') setAttempts(recent.value.data.attempts ?? []);
+      if (recommended.status === 'fulfilled') setExams(recommended.value.data.exams ?? []);
     };
 
-    verifyAndLoad().finally(() => setLoading(false));
+    load().finally(() => setLoading(false));
   }, [router, searchParams]);
+
+  const openAttempt = (attempt: Attempt) => {
+    router.push(attempt.status === 'in_progress' ? `/exam/${attempt.exam_id}` : `/result/${attempt.id}`);
+  };
+
+  const context = useMemo(() => pageCopy[activeNav], [activeNav]);
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-growly-bg flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-growly-blue flex items-center justify-center">
-            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-          </div>
-          <p className="text-[13px] text-growly-muted font-medium">Loading your dashboard...</p>
+      <div className="min-h-screen bg-[#F4F6FB] px-6 py-8">
+        <div className="mx-auto max-w-6xl animate-pulse">
+          <div className="h-12 w-48 rounded-xl bg-[#E7EAF2]" />
+          <div className="mt-8 h-64 rounded-3xl bg-[#E7EAF2]" />
+          <div className="mt-5 grid gap-4 sm:grid-cols-3"><div className="h-32 rounded-2xl bg-[#E7EAF2]" /><div className="h-32 rounded-2xl bg-[#E7EAF2]" /><div className="h-32 rounded-2xl bg-[#E7EAF2]" /></div>
         </div>
       </div>
     );
   }
 
-
   return (
-    <div className="min-h-screen bg-growly-bg font-sans flex">
-      {/* Sidebar */}
-      <GrowlySidebar
-        activeNav={activeNav}
-        setActiveNav={setActiveNav}
-        mobileOpen={mobileOpen}
-        setMobileOpen={setMobileOpen}
-      />
-
-      {/* Main area: push content right of fixed sidebar on desktop */}
-      <div className="flex-1 flex flex-col md:ml-[250px] min-w-0">
-        {/* Header */}
-        <GrowlyHeader
-          userName={user?.name ?? ''}
-          onMenuClick={() => setMobileOpen(true)}
-        />
-
-        {/* Page content */}
-        <main className="flex-1 p-5 md:p-8 overflow-y-auto">
-          {/* Page title row */}
-          <div className="flex items-center justify-between mb-6">
+    <div className="min-h-screen bg-[#F4F6FB] font-sans text-[#161E31]">
+      <GrowlySidebar activeNav={activeNav} setActiveNav={setActiveNav} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} />
+      <div className="min-w-0 md:ml-[272px]">
+        <GrowlyHeader userName={user?.name ?? ''} targetGoal={user?.target_goal ?? ''} onMenuClick={() => setMobileOpen(true)} onProfileClick={() => setActiveNav('settings')} />
+        <main className="mx-auto w-full max-w-[1480px] px-5 py-7 sm:px-7 lg:px-9 lg:py-9">
+          <div className="mb-7 flex flex-wrap items-end justify-between gap-4">
             <div>
-              <h2 className="text-[22px] font-semibold text-growly-ink leading-tight">
-                {activeNav === 'dashboard' ? 'Dashboard Overview' : navTitles[activeNav]?.title}
-              </h2>
-              <p className="text-[13px] text-growly-muted mt-0.5">
-                {activeNav === 'dashboard'
-                  ? "Here's what's happening with your teams today."
-                  : navTitles[activeNav]?.desc}
-              </p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#6F788A]">{context.eyebrow}</p>
+              <h1 className="mt-2 font-display text-3xl leading-none tracking-[-0.035em] text-[#121A30] sm:text-[2.15rem]">{context.title}</h1>
+              <p className="mt-2 max-w-xl text-sm leading-6 text-[#717A8D]">{context.description}</p>
             </div>
-
-            {activeNav === 'dashboard' && (
-              <div className="hidden md:flex items-center gap-3">
-                <button
-                  onClick={() => { localStorage.clear(); router.push('/'); }}
-                  className="flex items-center gap-1.5 text-[12px] font-medium text-growly-muted hover:text-growly-ink border border-gray-200 hover:border-gray-300 rounded-xl px-3 py-2 transition-all"
-                >
-                  <LogOut size={14} /> Sign out
-                </button>
-                <button className="flex items-center gap-1.5 text-[13px] font-semibold bg-growly-blue hover:bg-growly-blue/90 text-white rounded-xl px-4 py-2 transition-all shadow-sm hover:shadow-md active:scale-[0.98]">
-                  Assign Course <ChevronRight size={14} />
-                </button>
-              </div>
-            )}
+            {activeNav === 'command' && <p className="hidden items-center gap-2 text-xs font-medium text-[#737C8E] sm:flex"><CalendarDays size={14} /> {new Intl.DateTimeFormat('en-IN', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date())}</p>}
           </div>
 
-          {/* Section content */}
           <AnimatePresence mode="wait">
-            {activeNav === 'dashboard' ? (
-              <GrowlyDashboardView key="dashboard" user={user} stats={stats} />
-            ) : activeNav === 'exams' ? (
-              <motion.div
-                key="exams"
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.3 }}
-              >
-                <RecommendedExams />
-              </motion.div>
-            ) : activeNav === 'settings' ? (
-              <motion.div
-                key="settings"
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.3 }}
-              >
-                <ProfileSettings />
-              </motion.div>
-            ) : (
-              <motion.div
-                key={activeNav}
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.3 }}
-              >
-                <PlaceholderView
-                  title={navTitles[activeNav]?.title ?? activeNav}
-                  description={navTitles[activeNav]?.desc}
-                />
-              </motion.div>
-            )}
+            {activeNav === 'command' && <DashboardOverview key="command" user={user} stats={stats} attempts={attempts} exams={exams} onNavigate={setActiveNav} onOpenAttempt={openAttempt} />}
+            {activeNav === 'practice' && <motion.div key="practice" initial="hidden" animate="visible" exit={{ opacity: 0, y: -8 }} variants={reveal}><RecommendedExams /></motion.div>}
+            {activeNav === 'performance' && <PerformanceView key="performance" stats={stats} attempts={attempts} onOpenAttempt={openAttempt} />}
+            {activeNav === 'settings' && <motion.div key="settings" initial="hidden" animate="visible" exit={{ opacity: 0, y: -8 }} variants={reveal}><ProfileSettings onProfileSaved={setUser} /></motion.div>}
           </AnimatePresence>
         </main>
       </div>
@@ -264,15 +405,5 @@ function DashboardContent() {
 }
 
 export default function Dashboard() {
-  return (
-    <Suspense
-      fallback={
-        <div className="min-h-screen bg-growly-bg flex items-center justify-center">
-          <div className="w-6 h-6 border-2 border-growly-blue border-t-transparent rounded-full animate-spin" />
-        </div>
-      }
-    >
-      <DashboardContent />
-    </Suspense>
-  );
+  return <Suspense fallback={<div className="min-h-screen bg-[#F4F6FB]" />}><DashboardContent /></Suspense>;
 }
