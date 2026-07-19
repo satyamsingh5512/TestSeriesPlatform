@@ -68,6 +68,7 @@ CREATE TABLE users (
     study_level VARCHAR(30), -- school, undergrad, postgrad, working, other
     stream VARCHAR(100), -- e.g. Science, Commerce, Arts, Engineering, Medical
     course VARCHAR(150), -- e.g. B.Tech, B.Com, MBBS
+    target_goal VARCHAR(150), -- e.g. UPSC CSE, JEE Main — the exam/goal the student is preparing for
     consent_verified BOOLEAN DEFAULT FALSE,
     parent_consent_at TIMESTAMPTZ,
     current_session_token TEXT,
