@@ -81,7 +81,7 @@ export function LoginModal({ isOpen, onClose, onSwitch, onForgotPassword }: any)
 
 export function RegisterModal({ isOpen, onClose, onSwitch }: any) {
   const router = useRouter();
-  const [form, setForm] = useState({ name: '', email: '', password: '' });
+  const [form, setForm] = useState({ name: '', email: '', password: '', age: '', study_level: '', stream: '', course: '' });
   const [error, setError] = useState('');
   const { tenant } = useTenant();
   
@@ -89,7 +89,12 @@ export function RegisterModal({ isOpen, onClose, onSwitch }: any) {
     e.preventDefault();
     setError('');
     try {
-      const { data } = await axios.post(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/auth/register`, { ...form, tenant_id: tenant?.id || DEFAULT_TENANT_ID });
+      const payload = {
+        ...form,
+        age: form.age ? Number(form.age) : undefined,
+        tenant_id: tenant?.id || DEFAULT_TENANT_ID,
+      };
+      const { data } = await axios.post(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/auth/register`, payload);
       localStorage.setItem('token', data.token); localStorage.setItem('user', JSON.stringify(data.user)); router.push('/dashboard');
     } catch (err: any) { 
       setError(err.response?.data?.error || 'Registration failed. Please try again.'); 
@@ -100,13 +105,31 @@ export function RegisterModal({ isOpen, onClose, onSwitch }: any) {
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-base/80 backdrop-blur-sm">
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }} className="panel w-full max-w-sm p-8 shadow-2xl">
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }} className="panel w-full max-w-sm p-8 shadow-2xl max-h-[90vh] overflow-y-auto">
             <h2 className="text-xl font-semibold text-highlight mb-6">Create Account</h2>
             {error && <div className="text-red-500 text-sm mb-4 bg-red-500/10 p-3 rounded">{error}</div>}
             <form onSubmit={submit} className="space-y-4">
-              <div><label className="text-xs font-semibold text-muted block mb-1">Name</label><input type="text" required onChange={e => setForm({...form, name: e.target.value})} /></div>
-              <div><label className="text-xs font-semibold text-muted block mb-1">Email</label><input type="email" required onChange={e => setForm({...form, email: e.target.value})} /></div>
-              <div><label className="text-xs font-semibold text-muted block mb-1">Password</label><input type="password" required onChange={e => setForm({...form, password: e.target.value})} /></div>
+              <div><label className="text-xs font-semibold text-muted block mb-1">Name</label><input type="text" required value={form.name} onChange={e => setForm({...form, name: e.target.value})} /></div>
+              <div><label className="text-xs font-semibold text-muted block mb-1">Email</label><input type="email" required value={form.email} onChange={e => setForm({...form, email: e.target.value})} /></div>
+              <div><label className="text-xs font-semibold text-muted block mb-1">Password</label><input type="password" required value={form.password} onChange={e => setForm({...form, password: e.target.value})} /></div>
+              <div><label className="text-xs font-semibold text-muted block mb-1">Age</label><input type="number" min={5} max={100} required value={form.age} onChange={e => setForm({...form, age: e.target.value})} /></div>
+              <div>
+                <label className="text-xs font-semibold text-muted block mb-1">Study Status</label>
+                <select required value={form.study_level} onChange={e => setForm({...form, study_level: e.target.value})}>
+                  <option value="">Select...</option>
+                  <option value="school">School</option>
+                  <option value="undergrad">Undergraduate</option>
+                  <option value="postgrad">Postgraduate</option>
+                  <option value="working">Working Professional</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              {(form.study_level === 'undergrad' || form.study_level === 'postgrad') && (
+                <div className="grid grid-cols-2 gap-3">
+                  <div><label className="text-xs font-semibold text-muted block mb-1">Stream</label><input type="text" placeholder="e.g. Engineering" value={form.stream} onChange={e => setForm({...form, stream: e.target.value})} /></div>
+                  <div><label className="text-xs font-semibold text-muted block mb-1">Course</label><input type="text" placeholder="e.g. B.Tech" value={form.course} onChange={e => setForm({...form, course: e.target.value})} /></div>
+                </div>
+              )}
               <button type="submit" className="btn btn-primary w-full justify-center py-2.5" style={{ backgroundColor: 'var(--primary, #0f172a)' }}>Join</button>
             </form>
             <p className="text-xs text-muted mt-6 text-center">Member? <button onClick={onSwitch} className="text-accent hover:underline" style={{ color: 'var(--primary, #2563eb)' }}>Sign In</button></p>
