@@ -15,7 +15,8 @@ async function ensureRuntimeSchema() {
         ADD COLUMN IF NOT EXISTS age INTEGER,
         ADD COLUMN IF NOT EXISTS study_level VARCHAR(30),
         ADD COLUMN IF NOT EXISTS stream VARCHAR(100),
-        ADD COLUMN IF NOT EXISTS course VARCHAR(150);
+        ADD COLUMN IF NOT EXISTS course VARCHAR(150),
+        ADD COLUMN IF NOT EXISTS target_goal VARCHAR(150);
     `);
 
     await client.query(`
