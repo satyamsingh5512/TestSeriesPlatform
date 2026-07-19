@@ -16,6 +16,7 @@ import { SkillMatrix } from '@/components/growly/SkillMatrix';
 import { CourseLibrary } from '@/components/growly/CourseLibrary';
 import { PlaceholderView } from '@/components/growly/PlaceholderView';
 import { RecommendedExams } from '@/components/growly/RecommendedExams';
+import { ProfileSettings } from '@/components/growly/ProfileSettings';
 
 // Sparkline seeds (static demo data)
 const SPARKLINES = {
@@ -230,6 +231,16 @@ function DashboardContent() {
                 transition={{ duration: 0.3 }}
               >
                 <RecommendedExams />
+              </motion.div>
+            ) : activeNav === 'settings' ? (
+              <motion.div
+                key="settings"
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <ProfileSettings />
               </motion.div>
             ) : (
               <motion.div
