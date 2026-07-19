@@ -15,6 +15,7 @@ import { DepartmentCompletionChart } from '@/components/growly/DepartmentComplet
 import { SkillMatrix } from '@/components/growly/SkillMatrix';
 import { CourseLibrary } from '@/components/growly/CourseLibrary';
 import { PlaceholderView } from '@/components/growly/PlaceholderView';
+import { RecommendedExams } from '@/components/growly/RecommendedExams';
 
 // Sparkline seeds (static demo data)
 const SPARKLINES = {
@@ -37,6 +38,7 @@ const stagger = {
 type NavInfo = { title: string; desc: string };
 
 const navTitles: { [key: string]: NavInfo } = {
+  exams:     { title: 'Exams',           desc: 'Exams recommended for your profile — jump in and start.' },
   paths:     { title: 'Learning Paths',  desc: 'Manage and track custom learning paths for your teams.' },
   library:   { title: 'Course Library',  desc: 'Browse the full catalogue of available courses.' },
   analytics: { title: 'Analytics',       desc: 'Deep-dive into team performance trends and learning velocity.' },
@@ -219,6 +221,16 @@ function DashboardContent() {
           <AnimatePresence mode="wait">
             {activeNav === 'dashboard' ? (
               <GrowlyDashboardView key="dashboard" user={user} stats={stats} />
+            ) : activeNav === 'exams' ? (
+              <motion.div
+                key="exams"
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <RecommendedExams />
+              </motion.div>
             ) : (
               <motion.div
                 key={activeNav}
