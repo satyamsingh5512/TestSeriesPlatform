@@ -8,7 +8,7 @@ function apiClient() { return axios.create({ baseURL: process.env.NEXT_PUBLIC_AP
 export default function CreateExamPage() {
   const router = useRouter();
   const [tab, setTab] = useState<'meta'|'content'>('meta');
-  const [meta, setMeta] = useState({ title: '', duration_minutes: 180, total_marks: 100, exam_type: 'fixed' });
+  const [meta, setMeta] = useState({ title: '', goal: '', duration_minutes: 180, total_marks: 100, exam_type: 'fixed' });
   const [sections, setSections] = useState<any[]>([{ title: 'Section 1', duration_minutes: '', questions: [{ qtype: 'MCQ', difficulty_tier: 'medium', text: '', options: {A:'', B:'', C:'', D:''}, correct_key: '', marks: 4, negative_marks: -1 }] }]);
 
   const [saving, setSaving] = useState(false);
@@ -142,6 +142,7 @@ export default function CreateExamPage() {
       {tab === 'meta' && (
         <div className="panel p-6 space-y-5">
           <div><label className="block text-xs font-semibold text-muted mb-2">Exam Title <span className="text-red-500">*</span></label><input required value={meta.title} onChange={e => setMeta({...meta, title: e.target.value})} placeholder="e.g. Midterm 2026" className="w-full" /></div>
+          <div><label className="block text-xs font-semibold text-muted mb-2">Exam Goal</label><input value={meta.goal} onChange={e => setMeta({...meta, goal: e.target.value})} placeholder="e.g. UPSC CSE Prelims, JEE Main, Bank PO" className="w-full" /></div>
           <div className="grid grid-cols-2 gap-4">
              <div><label className="block text-xs font-semibold text-muted mb-2">Duration (mins)</label><input type="number" value={meta.duration_minutes} onChange={e => setMeta({...meta, duration_minutes: parseInt(e.target.value)})} /></div>
              <div><label className="block text-xs font-semibold text-muted mb-2">Format</label><select value={meta.exam_type} onChange={e => setMeta({...meta, exam_type: e.target.value})}><option value="fixed">Standard</option><option value="adaptive">Adaptive</option></select></div>
