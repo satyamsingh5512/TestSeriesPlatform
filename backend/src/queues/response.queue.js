@@ -3,7 +3,10 @@ const IORedis = require('ioredis');
 
 let responseQueue = null;
 
-if (process.env.REDIS_URL) {
+// PAUSED: BullMQ disabled until re-enabled (set BULLMQ_ENABLED=true to turn back on).
+// Reason: Upstash per-command request quota was being exhausted by the worker's
+// blocking poll loop (bzpopmin) against bull:responses:marker.
+if (process.env.BULLMQ_ENABLED === 'true' && process.env.REDIS_URL) {
   const connection = new IORedis(process.env.REDIS_URL, {
     maxRetriesPerRequest: null,
     enableReadyCheck: false,
@@ -15,7 +18,7 @@ if (process.env.REDIS_URL) {
   responseQueue = new Queue('responses', { connection });
   console.log('✅ BullMQ response queue ready');
 } else {
-  console.warn('⚠️  REDIS_URL not set. Response queue is disabled (direct DB writes will be used).');
+  console.warn('⚠️  BullMQ response queue is paused. Direct DB writes will be used. (Set BULLMQ_ENABLED=true to re-enable.)');
 }
 
 module.exports = responseQueue;
