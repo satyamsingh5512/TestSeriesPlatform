@@ -1,8 +1,9 @@
 'use client';
+
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
-import { Target, Clock, ArrowRight } from 'lucide-react';
+import { ArrowUpRight, Clock3, Play, Sparkles, Target } from 'lucide-react';
 
 interface RecommendedExam {
   id: string;
@@ -29,57 +30,51 @@ export function RecommendedExams() {
 
     api.get('/api/exams/recommended')
       .then(({ data }) => setExams(data.exams ?? []))
-      .catch((err) => setError(err.response?.data?.error || 'Failed to load exams.'))
+      .catch((requestError) => setError(requestError.response?.data?.error || 'We could not load matched practice right now.'))
       .finally(() => setLoading(false));
   }, []);
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-16">
-        <div className="w-6 h-6 border-2 border-growly-blue border-t-transparent rounded-full animate-spin" />
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        {[0, 1, 2].map((item) => <div key={item} className="h-56 animate-pulse rounded-2xl border border-[#E6E9F0] bg-white" />)}
       </div>
     );
   }
 
   if (error) {
-    return <div className="text-sm text-red-500 bg-red-500/10 p-4 rounded-xl">{error}</div>;
+    return <div className="rounded-2xl border border-[#F0C7C2] bg-[#FFF5F3] px-5 py-4 text-sm text-[#A2443B]">{error}</div>;
   }
 
   if (!exams.length) {
     return (
-      <div className="text-sm text-growly-muted bg-white border border-gray-100 rounded-xl p-8 text-center">
-        No exams available right now. Check back soon.
+      <div className="rounded-2xl border border-dashed border-[#D8DEE9] bg-white px-6 py-14 text-center">
+        <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-xl bg-[#F4F6FB] text-[#3855A5]"><Target size={19} /></span>
+        <h3 className="mt-4 text-base font-semibold text-[#182136]">No matched practice yet</h3>
+        <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-[#727C91]">Update your target exam and study profile, then return here for more relevant practice.</p>
+        <button onClick={() => router.push('/dashboard')} className="mt-5 inline-flex items-center gap-1 text-xs font-bold text-[#3452A4] hover:text-[#1C2D63]">Go to your command centre <ArrowUpRight size={13} /></button>
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {exams.map((exam) => (
-        <div key={exam.id} className="bg-white border border-gray-100 rounded-xl p-5 flex flex-col gap-3 hover:shadow-md transition-shadow">
-          <div>
-            <h3 className="text-[15px] font-semibold text-growly-ink">{exam.title}</h3>
-            {exam.goal && (
-              <p className="mt-1 inline-flex items-center gap-1 text-[11px] font-medium text-growly-blue bg-growly-blue-light px-2 py-0.5 rounded-full">
-                <Target size={12} /> {exam.goal}
-              </p>
-            )}
+    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      {exams.map((exam, index) => (
+        <article key={exam.id} className="group flex min-h-[240px] flex-col rounded-2xl border border-[#E3E7EF] bg-white p-5 shadow-[0_1px_1px_rgba(15,23,42,.02)] transition-all duration-200 hover:-translate-y-1 hover:border-[#C5D0EC] hover:shadow-[0_14px_28px_rgba(22,37,80,.09)]">
+          <div className="flex items-start justify-between gap-3">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#F2F5FF] px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.1em] text-[#3855A5]"><Sparkles size={11} /> {index < 3 ? 'Strong match' : 'Recommended'}</span>
+            <span className="rounded-lg bg-[#F8F9FC] px-2 py-1 text-[10px] font-bold uppercase tracking-[0.09em] text-[#778196]">{exam.exam_type}</span>
           </div>
-          {exam.description && (
-            <p className="text-[13px] text-growly-muted line-clamp-2">{exam.description}</p>
-          )}
-          <div className="flex items-center gap-4 text-[12px] text-growly-muted">
-            <span className="flex items-center gap-1"><Clock size={13} /> {exam.duration_minutes} mins</span>
-            <span>{exam.total_marks} marks</span>
-            <span className="capitalize">{exam.exam_type}</span>
+          <div className="mt-5">
+            {exam.goal && <p className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold text-[#9A6112]"><Target size={12} /> {exam.goal}</p>}
+            <h3 className="text-lg font-semibold leading-6 tracking-[-0.025em] text-[#172036]">{exam.title}</h3>
+            {exam.description && <p className="mt-2 line-clamp-2 text-sm leading-5 text-[#6F798D]">{exam.description}</p>}
           </div>
-          <button
-            onClick={() => router.push(`/exam/${exam.id}`)}
-            className="mt-1 self-start flex items-center gap-1.5 text-[13px] font-semibold bg-growly-blue hover:bg-growly-blue/90 text-white rounded-xl px-4 py-2 transition-all shadow-sm hover:shadow-md active:scale-[0.98]"
-          >
-            Start Exam <ArrowRight size={14} />
-          </button>
-        </div>
+          <div className="mt-auto flex items-end justify-between gap-3 border-t border-[#EDF0F4] pt-4">
+            <span className="flex items-center gap-1.5 text-xs text-[#778196]"><Clock3 size={13} /> {exam.duration_minutes} min <span className="text-[#D0D5DF]">/</span> {exam.total_marks} marks</span>
+            <button onClick={() => router.push(`/exam/${exam.id}`)} className="inline-flex items-center gap-1.5 rounded-xl bg-[#1C2D63] px-3 py-2 text-xs font-bold text-white transition-colors hover:bg-[#2A438E] focus:outline-none focus:ring-2 focus:ring-[#9EB0E4]">Start <Play size={12} fill="currentColor" /></button>
+          </div>
+        </article>
       ))}
     </div>
   );
