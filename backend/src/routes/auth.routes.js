@@ -19,8 +19,18 @@ const registerSchema = Joi.object({
   age: Joi.number().integer().min(5).max(100).optional(),
   study_level: Joi.string().valid('school', 'undergrad', 'postgrad', 'working', 'other').optional(),
   stream: Joi.string().max(100).allow('').optional(),
-  course: Joi.string().max(150).allow('').optional()
+  course: Joi.string().max(150).allow('').optional(),
+  target_goal: Joi.string().max(150).allow('').optional()
 });
+
+const updateProfileSchema = Joi.object({
+  name: Joi.string().min(2).max(100).optional(),
+  age: Joi.number().integer().min(5).max(100).allow(null).optional(),
+  study_level: Joi.string().valid('school', 'undergrad', 'postgrad', 'working', 'other').allow(null, '').optional(),
+  stream: Joi.string().max(100).allow(null, '').optional(),
+  course: Joi.string().max(150).allow(null, '').optional(),
+  target_goal: Joi.string().max(150).allow(null, '').optional()
+}).min(1);
 
 const loginSchema = Joi.object({
   email: Joi.string().email().required(),
@@ -68,7 +78,7 @@ router.post('/register', async (req, res, next) => {
       return res.status(400).json({ error: error.details[0].message });
     }
 
-    const { name, email, password, tenant_id, dob, age, study_level, stream, course } = value;
+    const { name, email, password, tenant_id, dob, age, study_level, stream, course, target_goal } = value;
 
     // Check if tenant exists
     const tenantCheck = await pool.query('SELECT id FROM tenants WHERE id = $1', [tenant_id]);
@@ -89,10 +99,10 @@ router.post('/register', async (req, res, next) => {
     const sessionToken = require('crypto').randomUUID();
     
     const result = await pool.query(
-      `INSERT INTO users (name, email, password_hash, tenant_id, dob, age, study_level, stream, course, current_session_token, last_login_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW())
-       RETURNING id, name, email, role, tenant_id, age, study_level, stream, course, created_at`,
-      [name, email, password_hash, tenant_id, dob || null, age || null, study_level || null, stream || null, course || null, sessionToken]
+      `INSERT INTO users (name, email, password_hash, tenant_id, dob, age, study_level, stream, course, target_goal, current_session_token, last_login_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW())
+       RETURNING id, name, email, role, tenant_id, age, study_level, stream, course, target_goal, created_at`,
+      [name, email, password_hash, tenant_id, dob || null, age || null, study_level || null, stream || null, course || null, target_goal || null, sessionToken]
     );
 
     const user = result.rows[0];
@@ -239,7 +249,7 @@ router.post('/reset-password', async (req, res, next) => {
 router.get('/me', authMiddleware, async (req, res, next) => {
   try {
     const result = await pool.query(
-      'SELECT id, name, email, role, tenant_id, dob, age, study_level, stream, course, created_at FROM users WHERE id = $1',
+      'SELECT id, name, email, role, tenant_id, dob, age, study_level, stream, course, target_goal, created_at FROM users WHERE id = $1',
       [req.user.id]
     );
     if (!result.rows.length) return res.status(404).json({ error: 'User not found' });
@@ -248,6 +258,50 @@ router.get('/me', authMiddleware, async (req, res, next) => {
       status: 'success',
       user: result.rows[0] 
     });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// PATCH /api/auth/me — update own profile (name, age, study status, target goal)
+router.patch('/me', authMiddleware, async (req, res, next) => {
+  try {
+    const { error, value } = updateProfileSchema.validate(req.body);
+    if (error) return res.status(400).json({ error: error.details[0].message });
+
+    // Build the SET clause dynamically so only fields actually sent are touched.
+    const fields = ['name', 'age', 'study_level', 'stream', 'course', 'target_goal'];
+    const setClauses = [];
+    const params = [];
+    let idx = 1;
+
+    for (const field of fields) {
+      if (value[field] !== undefined) {
+        // Empty string clears an optional text field to NULL
+        const v = value[field] === '' ? null : value[field];
+        setClauses.push(`${field} = $${idx}`);
+        params.push(v);
+        idx += 1;
+      }
+    }
+
+    if (!setClauses.length) {
+      return res.status(400).json({ error: 'No valid fields provided to update.' });
+    }
+
+    setClauses.push('updated_at = NOW()');
+    params.push(req.user.id);
+
+    const result = await pool.query(
+      `UPDATE users SET ${setClauses.join(', ')}
+       WHERE id = $${idx}
+       RETURNING id, name, email, role, tenant_id, dob, age, study_level, stream, course, target_goal, created_at`,
+      params
+    );
+
+    if (!result.rows.length) return res.status(404).json({ error: 'User not found' });
+
+    res.json({ status: 'success', user: result.rows[0] });
   } catch (err) {
     next(err);
   }
