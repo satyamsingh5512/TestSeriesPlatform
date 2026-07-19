@@ -1,7 +1,8 @@
 'use client';
+
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Check, Loader2 } from 'lucide-react';
+import { Check, ChevronRight, Loader2, Target } from 'lucide-react';
 
 interface ProfileForm {
   name: string;
@@ -12,10 +13,15 @@ interface ProfileForm {
   target_goal: string;
 }
 
-const EMPTY_FORM: ProfileForm = { name: '', age: '', study_level: '', stream: '', course: '', target_goal: '' };
+interface ProfileSettingsProps {
+  onProfileSaved?: (user: any) => void;
+}
 
-export function ProfileSettings() {
-  const [form, setForm] = useState<ProfileForm>(EMPTY_FORM);
+const emptyForm: ProfileForm = { name: '', age: '', study_level: '', stream: '', course: '', target_goal: '' };
+const fieldClass = 'w-full rounded-xl border border-[#DCE1EA] bg-white px-3.5 py-2.5 text-sm text-[#1A2337] outline-none transition placeholder:text-[#A5ADBC] hover:border-[#C8CFDC] focus:border-[#6F84C2] focus:ring-4 focus:ring-[#DDE5FA]';
+
+export function ProfileSettings({ onProfileSaved }: ProfileSettingsProps) {
+  const [form, setForm] = useState<ProfileForm>(emptyForm);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -29,22 +35,24 @@ export function ProfileSettings() {
   useEffect(() => {
     api().get('/api/auth/me')
       .then(({ data }) => {
-        const u = data.user;
+        const user = data.user;
         setForm({
-          name: u.name ?? '',
-          age: u.age != null ? String(u.age) : '',
-          study_level: u.study_level ?? '',
-          stream: u.stream ?? '',
-          course: u.course ?? '',
-          target_goal: u.target_goal ?? '',
+          name: user.name ?? '',
+          age: user.age != null ? String(user.age) : '',
+          study_level: user.study_level ?? '',
+          stream: user.stream ?? '',
+          course: user.course ?? '',
+          target_goal: user.target_goal ?? '',
         });
       })
-      .catch(() => setError('Failed to load profile.'))
+      .catch(() => setError('Your profile could not be loaded. Refresh the page and try again.'))
       .finally(() => setLoading(false));
   }, []);
 
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const update = (key: keyof ProfileForm, nextValue: string) => setForm((current) => ({ ...current, [key]: nextValue }));
+
+  const submit = async (event: React.FormEvent) => {
+    event.preventDefault();
     setError('');
     setSaved(false);
     setSaving(true);
@@ -52,129 +60,70 @@ export function ProfileSettings() {
       const payload = {
         name: form.name,
         age: form.age === '' ? null : Number(form.age),
-        study_level: form.study_level === '' ? null : form.study_level,
+        study_level: form.study_level || null,
         stream: form.stream,
         course: form.course,
         target_goal: form.target_goal,
       };
       const { data } = await api().patch('/api/auth/me', payload);
-      const stored = JSON.parse(localStorage.getItem('user') || '{}');
-      localStorage.setItem('user', JSON.stringify({ ...stored, ...data.user }));
+      const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+      localStorage.setItem('user', JSON.stringify({ ...storedUser, ...data.user }));
+      onProfileSaved?.(data.user);
       setSaved(true);
-      setTimeout(() => setSaved(false), 2500);
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to save profile. Please try again.');
+      window.setTimeout(() => setSaved(false), 2600);
+    } catch (requestError: any) {
+      setError(requestError.response?.data?.error || 'Your changes could not be saved. Check the fields and try again.');
     } finally {
       setSaving(false);
     }
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-16">
-        <Loader2 className="animate-spin text-growly-blue" size={24} />
-      </div>
-    );
+    return <div className="max-w-3xl animate-pulse rounded-2xl border border-[#E6E9F0] bg-white p-6"><div className="h-6 w-44 rounded bg-[#E9ECF2]" /><div className="mt-7 grid gap-4 sm:grid-cols-2"><div className="h-12 rounded-xl bg-[#EDF0F4]" /><div className="h-12 rounded-xl bg-[#EDF0F4]" /></div></div>;
   }
 
   return (
-    <div className="max-w-xl bg-white border border-gray-100 rounded-xl p-6">
-      <h3 className="text-[15px] font-semibold text-growly-ink mb-1">Profile</h3>
-      <p className="text-[13px] text-growly-muted mb-5">
-        Keep your details up to date — we use this to recommend the right exams for you.
-      </p>
-
-      {error && <div className="text-sm text-red-500 bg-red-500/10 p-3 rounded-lg mb-4">{error}</div>}
-      {saved && (
-        <div className="flex items-center gap-2 text-sm text-green-700 bg-green-500/10 p-3 rounded-lg mb-4">
-          <Check size={14} /> Profile updated.
-        </div>
-      )}
-
-      <form onSubmit={submit} className="space-y-4">
-        <div>
-          <label className="text-xs font-semibold text-growly-muted block mb-1">Name</label>
-          <input
-            type="text"
-            required
-            value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
-            className="w-full"
-          />
-        </div>
-
-        <div>
-          <label className="text-xs font-semibold text-growly-muted block mb-1">Age</label>
-          <input
-            type="number"
-            min={5}
-            max={100}
-            value={form.age}
-            onChange={(e) => setForm({ ...form, age: e.target.value })}
-            className="w-full"
-          />
-        </div>
-
-        <div>
-          <label className="text-xs font-semibold text-growly-muted block mb-1">Study Status</label>
-          <select
-            value={form.study_level}
-            onChange={(e) => setForm({ ...form, study_level: e.target.value })}
-            className="w-full"
-          >
-            <option value="">Select...</option>
-            <option value="school">School</option>
-            <option value="undergrad">Undergraduate</option>
-            <option value="postgrad">Postgraduate</option>
-            <option value="working">Working Professional</option>
-            <option value="other">Other</option>
-          </select>
-        </div>
-
-        {(form.study_level === 'undergrad' || form.study_level === 'postgrad') && (
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs font-semibold text-growly-muted block mb-1">Stream</label>
-              <input
-                type="text"
-                placeholder="e.g. Engineering"
-                value={form.stream}
-                onChange={(e) => setForm({ ...form, stream: e.target.value })}
-                className="w-full"
-              />
-            </div>
-            <div>
-              <label className="text-xs font-semibold text-growly-muted block mb-1">Course</label>
-              <input
-                type="text"
-                placeholder="e.g. B.Tech"
-                value={form.course}
-                onChange={(e) => setForm({ ...form, course: e.target.value })}
-                className="w-full"
-              />
-            </div>
+    <div className="max-w-3xl overflow-hidden rounded-2xl border border-[#E2E6EE] bg-white shadow-[0_8px_24px_rgba(27,39,78,.04)]">
+      <div className="border-b border-[#E9ECF1] bg-[#FAFBFD] px-5 py-5 sm:px-6">
+        <div className="flex items-start gap-3">
+          <span className="flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-[#1C2D63] text-[#F1C567]"><Target size={18} /></span>
+          <div>
+            <h3 className="text-lg font-semibold tracking-[-0.025em] text-[#172036]">Your study profile</h3>
+            <p className="mt-1 text-sm leading-5 text-[#727C90]">Keep this current so we can place the most relevant practice in your library.</p>
           </div>
-        )}
-
-        <div>
-          <label className="text-xs font-semibold text-growly-muted block mb-1">Target Exam / Goal</label>
-          <input
-            type="text"
-            placeholder="e.g. UPSC CSE, JEE Main, Bank PO"
-            value={form.target_goal}
-            onChange={(e) => setForm({ ...form, target_goal: e.target.value })}
-            className="w-full"
-          />
         </div>
+      </div>
 
-        <button
-          type="submit"
-          disabled={saving}
-          className="flex items-center gap-1.5 text-[13px] font-semibold bg-growly-blue hover:bg-growly-blue/90 disabled:opacity-50 text-white rounded-xl px-4 py-2 transition-all shadow-sm hover:shadow-md active:scale-[0.98]"
-        >
-          {saving ? <Loader2 className="animate-spin" size={14} /> : <Check size={14} />}
-          {saving ? 'Saving...' : 'Save Changes'}
-        </button>
+      <form onSubmit={submit} className="p-5 sm:p-6">
+        {error && <div className="mb-5 rounded-xl border border-[#F1C9C4] bg-[#FFF4F2] px-4 py-3 text-sm text-[#A0443A]">{error}</div>}
+        {saved && <div className="mb-5 flex items-center gap-2 rounded-xl border border-[#C9E7D6] bg-[#F0FAF4] px-4 py-3 text-sm font-medium text-[#246C47]"><Check size={15} /> Your profile is up to date.</div>}
+
+        <section>
+          <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#6F788A]">About you</p>
+          <div className="mt-4 grid gap-4 sm:grid-cols-[1.5fr_.5fr]">
+            <label className="block"><span className="mb-1.5 block text-xs font-semibold text-[#4E586C]">Full name</span><input type="text" required value={form.name} onChange={(event) => update('name', event.target.value)} className={fieldClass} /></label>
+            <label className="block"><span className="mb-1.5 block text-xs font-semibold text-[#4E586C]">Age</span><input type="number" min={5} max={100} value={form.age} onChange={(event) => update('age', event.target.value)} className={fieldClass} /></label>
+          </div>
+        </section>
+
+        <section className="mt-7 border-t border-[#EEF0F4] pt-6">
+          <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#6F788A]">Academic context</p>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <label className="block"><span className="mb-1.5 block text-xs font-semibold text-[#4E586C]">Study status</span><select value={form.study_level} onChange={(event) => update('study_level', event.target.value)} className={fieldClass}><option value="">Select your current stage</option><option value="school">School</option><option value="undergrad">Undergraduate</option><option value="postgrad">Postgraduate</option><option value="working">Working professional</option><option value="other">Other</option></select></label>
+            <label className="block"><span className="mb-1.5 block text-xs font-semibold text-[#4E586C]">Stream</span><input type="text" placeholder="e.g. Engineering, Commerce" value={form.stream} onChange={(event) => update('stream', event.target.value)} className={fieldClass} /></label>
+            <label className="block sm:col-span-2"><span className="mb-1.5 block text-xs font-semibold text-[#4E586C]">Course or degree</span><input type="text" placeholder="e.g. B.Tech Computer Science" value={form.course} onChange={(event) => update('course', event.target.value)} className={fieldClass} /></label>
+          </div>
+        </section>
+
+        <section className="mt-7 border-t border-[#EEF0F4] pt-6">
+          <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#6F788A]">Preparation target</p>
+          <label className="mt-4 block"><span className="mb-1.5 block text-xs font-semibold text-[#4E586C]">Target exam or goal</span><input type="text" placeholder="e.g. UPSC CSE, JEE Main, Bank PO" value={form.target_goal} onChange={(event) => update('target_goal', event.target.value)} className={fieldClass} /><span className="mt-2 block text-[11px] leading-4 text-[#7A8395]">We use your target alongside your study profile to order recommended practice.</span></label>
+        </section>
+
+        <div className="mt-7 flex flex-wrap items-center justify-between gap-3 border-t border-[#EEF0F4] pt-5">
+          <p className="text-xs text-[#788196]">Changes apply to future recommendations.</p>
+          <button type="submit" disabled={saving} className="inline-flex items-center gap-2 rounded-xl bg-[#1C2D63] px-4 py-2.5 text-xs font-bold text-white transition-colors hover:bg-[#2A438E] disabled:cursor-not-allowed disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-[#9DB0E8]">{saving ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}{saving ? 'Saving changes' : 'Save profile'}<ChevronRight size={14} /></button>
+        </div>
       </form>
     </div>
   );
