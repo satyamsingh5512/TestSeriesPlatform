@@ -64,6 +64,10 @@ CREATE TABLE users (
     password_hash TEXT NOT NULL,
     role user_role DEFAULT 'student',
     dob DATE,
+    age INTEGER,
+    study_level VARCHAR(30), -- school, undergrad, postgrad, working, other
+    stream VARCHAR(100), -- e.g. Science, Commerce, Arts, Engineering, Medical
+    course VARCHAR(150), -- e.g. B.Tech, B.Com, MBBS
     consent_verified BOOLEAN DEFAULT FALSE,
     parent_consent_at TIMESTAMPTZ,
     current_session_token TEXT,
@@ -81,6 +85,7 @@ CREATE TABLE exams (
     tenant_id UUID REFERENCES tenants(id) ON DELETE CASCADE,
     title VARCHAR(255) NOT NULL,
     description TEXT,
+    goal VARCHAR(150), -- e.g. UPSC CSE Prelims, JEE Main, Bank PO — what the candidate is preparing for
     duration_minutes INTEGER NOT NULL DEFAULT 180,
     total_marks DECIMAL(10,2) DEFAULT 0.00,
     exam_type exam_type DEFAULT 'fixed',
