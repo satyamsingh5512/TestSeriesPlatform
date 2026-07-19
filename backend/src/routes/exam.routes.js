@@ -13,7 +13,7 @@ router.get('/', async (req, res, next) => {
   try {
     const { tenant_id } = req.user;
     const result = await pool.query(
-      `SELECT id, title, description, duration_minutes, total_marks, exam_type, created_at
+      `SELECT id, title, description, goal, duration_minutes, total_marks, exam_type, created_at
        FROM exams 
        WHERE tenant_id = $1 AND status = 'published' 
        ORDER BY created_at DESC`,
@@ -22,6 +22,97 @@ router.get('/', async (req, res, next) => {
     res.json({ status: 'success', exams: result.rows });
   } catch (err) { 
     next(err); 
+  }
+});
+
+/**
+ * GET /api/exams/recommended
+ * Suggest published exams matching the current user's profile
+ * (age, study_level, stream, course) against exam goal/title/description.
+ * Must be declared before GET /:id to avoid being captured as an :id param.
+ */
+router.get('/recommended', async (req, res, next) => {
+  try {
+    const { tenant_id, id: user_id } = req.user;
+
+    const userRes = await pool.query(
+      'SELECT age, study_level, stream, course FROM users WHERE id = $1',
+      [user_id]
+    );
+    const profile = userRes.rows[0] || {};
+
+    const examsRes = await pool.query(
+      `SELECT id, title, description, goal, duration_minutes, total_marks, exam_type, created_at
+       FROM exams
+       WHERE tenant_id = $1 AND status = 'published'
+       ORDER BY created_at DESC`,
+      [tenant_id]
+    );
+
+    // Study-level -> typical age band, used only when the exam text doesn't
+    // give us a clearer signal (age ranges are indicative, not strict cutoffs).
+    const AGE_BANDS = {
+      school: [14, 18],
+      undergrad: [17, 25],
+      postgrad: [21, 30],
+      working: [21, 60],
+      other: [0, 120],
+    };
+
+    const keywordsFor = (level) => ({
+      school: ['jee', 'neet', 'ncert', 'board', 'olympiad', 'school'],
+      undergrad: ['gate', 'placement', 'campus', 'internship', 'aptitude'],
+      postgrad: ['gate', 'net', 'phd', 'research', 'ugc'],
+      working: ['bank', 'ssc', 'upsc', 'psu', 'po', 'clerk', 'civil services', 'railway'],
+      other: [],
+    }[level] || []);
+
+    const norm = (s) => (s || '').toLowerCase();
+
+    const scoreExam = (exam) => {
+      let score = 0;
+      const text = `${norm(exam.goal)} ${norm(exam.title)} ${norm(exam.description)}`;
+
+      // Direct stream/course keyword match against goal/title/description
+      if (profile.stream && text.includes(norm(profile.stream))) score += 3;
+      if (profile.course && text.includes(norm(profile.course))) score += 3;
+
+      // Study-level keyword heuristics
+      const kws = keywordsFor(profile.study_level);
+      for (const kw of kws) {
+        if (text.includes(kw)) score += 2;
+      }
+
+      // Age-band plausibility (soft signal, not a filter)
+      if (profile.age) {
+        const band = AGE_BANDS[profile.study_level] || AGE_BANDS.other;
+        if (profile.age >= band[0] && profile.age <= band[1]) score += 1;
+      }
+
+      return score;
+    };
+
+    const ranked = examsRes.rows
+      .map((exam) => ({ ...exam, match_score: scoreExam(exam) }))
+      .sort((a, b) => b.match_score - a.match_score);
+
+    // If the profile is incomplete or nothing scored, fall back to showing
+    // all published exams (most recent first) rather than an empty list.
+    const hasProfile = profile.study_level || profile.stream || profile.course || profile.age;
+    const recommended = hasProfile ? ranked.filter((e) => e.match_score > 0) : ranked;
+
+    res.json({
+      status: 'success',
+      profile_used: {
+        age: profile.age || null,
+        study_level: profile.study_level || null,
+        stream: profile.stream || null,
+        course: profile.course || null,
+      },
+      exams: (recommended.length ? recommended : ranked).slice(0, 20),
+    });
+  } catch (err) {
+    next(err);
   }
 });
 
