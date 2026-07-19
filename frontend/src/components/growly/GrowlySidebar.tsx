@@ -1,119 +1,94 @@
 'use client';
-import React from 'react';
-import Link from 'next/link';
-import {
-  LayoutDashboard, BookOpen, Library, BarChart3, Users, Settings, X,
-  GraduationCap, ClipboardList,
-} from 'lucide-react';
 
-interface NavItem {
-  icon: React.ReactNode;
-  label: string;
-  href: string;
-  active?: boolean;
-}
+import React from 'react';
+import {
+  BarChart3,
+  BookOpenCheck,
+  CircleUserRound,
+  Compass,
+  LogOut,
+  Menu,
+  Target,
+  X,
+} from 'lucide-react';
+import { useRouter } from 'next/navigation';
+
+type DashboardNav = 'command' | 'practice' | 'performance' | 'settings';
 
 interface GrowlySidebarProps {
-  activeNav: string;
-  setActiveNav: (nav: string) => void;
+  activeNav: DashboardNav;
+  setActiveNav: (nav: DashboardNav) => void;
   mobileOpen: boolean;
   setMobileOpen: (open: boolean) => void;
 }
 
-const navItems: NavItem[] = [
-  { icon: <LayoutDashboard size={18} />, label: 'Dashboard', href: 'dashboard' },
-  { icon: <ClipboardList size={18} />, label: 'Exams', href: 'exams' },
-  { icon: <BookOpen size={18} />, label: 'Learning Paths', href: 'paths' },
-  { icon: <Library size={18} />, label: 'Course Library', href: 'library' },
-  { icon: <BarChart3 size={18} />, label: 'Analytics', href: 'analytics' },
-  { icon: <Users size={18} />, label: 'Employees', href: 'employees' },
+const primaryItems: Array<{ id: DashboardNav; label: string; caption: string; icon: React.ElementType }> = [
+  { id: 'command', label: 'Command centre', caption: 'Your preparation', icon: Compass },
+  { id: 'practice', label: 'Practice library', caption: 'Matched exams', icon: BookOpenCheck },
+  { id: 'performance', label: 'Performance', caption: 'Attempt history', icon: BarChart3 },
 ];
 
-const bottomItems: NavItem[] = [
-  { icon: <Settings size={18} />, label: 'Settings', href: 'settings' },
-];
-
-function NavItemRow({ item, active, onClick }: { item: NavItem; active: boolean; onClick: () => void }) {
+function SidebarItem({ item, active, onClick }: { item: (typeof primaryItems)[number] | { id: DashboardNav; label: string; caption: string; icon: React.ElementType }; active: boolean; onClick: () => void }) {
+  const Icon = item.icon;
   return (
     <button
       onClick={onClick}
-      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 group
-        ${active
-          ? 'bg-growly-blue-light text-growly-blue border-l-2 border-growly-blue pl-[10px]'
-          : 'text-growly-muted hover:bg-gray-50 hover:text-growly-ink border-l-2 border-transparent'
-        }`}
+      className={`group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors focus:outline-none focus:ring-2 focus:ring-[#9DB0E8]
+        ${active ? 'bg-[#263B7A] text-white shadow-[0_7px_16px_rgba(16,31,80,.23)]' : 'text-[#B7C1D8] hover:bg-white/[0.07] hover:text-white'}`}
     >
-      <span className={`flex-shrink-0 transition-colors ${active ? 'text-growly-blue' : 'text-growly-muted group-hover:text-growly-ink'}`}>
-        {item.icon}
+      <span className={`flex h-8 w-8 flex-none items-center justify-center rounded-lg ${active ? 'bg-white/[0.13] text-[#F2C86E]' : 'bg-white/[0.06] text-[#AAB7D5] group-hover:text-[#E6BD65]'}`}><Icon size={16} strokeWidth={2} /></span>
+      <span className="min-w-0">
+        <span className="block text-[13px] font-semibold leading-4">{item.label}</span>
+        <span className={`mt-0.5 block text-[10px] leading-3 ${active ? 'text-[#C9D4F0]' : 'text-[#8493B4]'}`}>{item.caption}</span>
       </span>
-      <span>{item.label}</span>
     </button>
   );
 }
 
 export function GrowlySidebar({ activeNav, setActiveNav, mobileOpen, setMobileOpen }: GrowlySidebarProps) {
+  const router = useRouter();
+  const choose = (view: DashboardNav) => {
+    setActiveNav(view);
+    setMobileOpen(false);
+  };
+
   const sidebar = (
-    <div className="flex flex-col h-full bg-white border-r border-gray-100 w-[250px]">
-      {/* Logo */}
-      <div className="flex items-center justify-between px-6 pt-6 pb-5 border-b border-gray-100">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-growly-blue flex items-center justify-center">
-            <GraduationCap size={16} className="text-white" />
-          </div>
-          <span className="text-xl font-bold text-growly-blue tracking-tight">Growly</span>
+    <div className="flex h-full w-[272px] flex-col bg-[#111A36] px-4 py-5 text-white">
+      <div className="flex items-center justify-between px-2 pb-6">
+        <div className="flex items-center gap-3">
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#E7B45B] text-[#17203B] shadow-[0_7px_18px_rgba(231,180,91,.2)]"><Target size={18} strokeWidth={2.5} /></span>
+          <span>
+            <span className="block font-display text-xl leading-5 tracking-[-0.04em] text-white">ExamForge</span>
+            <span className="mt-1 block text-[9px] font-bold uppercase tracking-[0.18em] text-[#9CAAC9]">Preparation desk</span>
+          </span>
         </div>
-        {/* Mobile close button */}
-        <button
-          onClick={() => setMobileOpen(false)}
-          className="md:hidden p-1 rounded-lg hover:bg-gray-100 text-growly-muted"
-        >
-          <X size={18} />
-        </button>
+        <button onClick={() => setMobileOpen(false)} className="rounded-lg p-2 text-[#AAB7D5] hover:bg-white/[0.07] hover:text-white md:hidden" aria-label="Close navigation"><X size={18} /></button>
       </div>
 
-      {/* Nav */}
-      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-        <p className="text-[11px] font-semibold uppercase tracking-widest text-growly-muted/60 px-3 mb-3">
-          Main Menu
-        </p>
-        {navItems.map((item) => (
-          <NavItemRow
-            key={item.href}
-            item={item}
-            active={activeNav === item.href}
-            onClick={() => { setActiveNav(item.href); setMobileOpen(false); }}
-          />
-        ))}
+      <div className="mb-3 px-3 text-[9px] font-bold uppercase tracking-[0.2em] text-[#7889B1]">Workspace</div>
+      <nav className="space-y-1.5">
+        {primaryItems.map((item) => <SidebarItem key={item.id} item={item} active={activeNav === item.id} onClick={() => choose(item.id)} />)}
       </nav>
 
-      {/* Bottom */}
-      <div className="px-3 pb-5 border-t border-gray-100 pt-4 space-y-1">
-        {bottomItems.map((item) => (
-          <NavItemRow
-            key={item.href}
-            item={item}
-            active={activeNav === item.href}
-            onClick={() => { setActiveNav(item.href); setMobileOpen(false); }}
-          />
-        ))}
+      <div className="my-6 border-t border-white/[0.08]" />
+      <div className="mb-3 px-3 text-[9px] font-bold uppercase tracking-[0.2em] text-[#7889B1]">Account</div>
+      <SidebarItem item={{ id: 'settings', label: 'Profile', caption: 'Goals & study details', icon: CircleUserRound }} active={activeNav === 'settings'} onClick={() => choose('settings')} />
+
+      <div className="mt-auto rounded-2xl border border-white/[0.09] bg-white/[0.045] p-3">
+        <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#94A4C4]">Preparation tip</p>
+        <p className="mt-2 text-xs leading-5 text-[#C1CAE0]">Review each attempt before starting another one. Your analysis is the study plan.</p>
       </div>
+      <button onClick={() => { localStorage.clear(); router.push('/'); }} className="mt-3 flex items-center gap-2 rounded-xl px-3 py-2.5 text-xs font-semibold text-[#AAB7D5] transition-colors hover:bg-white/[0.07] hover:text-white"><LogOut size={15} /> Sign out</button>
     </div>
   );
 
   return (
     <>
-      {/* Desktop: fixed sidebar */}
-      <aside className="hidden md:flex flex-col w-[250px] flex-shrink-0 fixed left-0 top-0 h-screen z-30">
-        {sidebar}
-      </aside>
-
-      {/* Mobile: overlay */}
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-[272px] md:block">{sidebar}</aside>
       {mobileOpen && (
-        <div className="md:hidden fixed inset-0 z-40 flex">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setMobileOpen(false)} />
-          <div className="relative z-10 h-full flex flex-col">
-            {sidebar}
-          </div>
+        <div className="fixed inset-0 z-50 flex md:hidden">
+          <button className="absolute inset-0 bg-[#091026]/60 backdrop-blur-[2px]" onClick={() => setMobileOpen(false)} aria-label="Close navigation overlay" />
+          <aside className="relative z-10 h-full shadow-2xl">{sidebar}</aside>
         </div>
       )}
     </>
