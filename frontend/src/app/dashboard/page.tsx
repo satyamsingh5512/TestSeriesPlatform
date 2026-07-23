@@ -125,7 +125,7 @@ function ReadinessDial({ percentile }: { percentile: number | null }) {
 
 function SignalCard({ label, metric, detail, icon: Icon }: { label: string; metric: string; detail: string; icon: React.ElementType }) {
   return (
-    <div className="rounded-2xl border border-[#E6E9F0] bg-white p-4 shadow-[0_1px_1px_rgba(15,23,42,0.02)]">
+    <div className="glass-surface rounded-2xl p-4">
       <div className="mb-5 flex items-center justify-between">
         <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#6E7789]">{label}</span>
         <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#F3F5FB] text-[#334FA2]"><Icon size={14} strokeWidth={2.2} /></span>
@@ -161,7 +161,7 @@ function AttemptRows({ attempts, onOpen }: { attempts: Attempt[]; onOpen: (attem
   return (
     <div className="divide-y divide-[#EAECF1]">
       {attempts.map((attempt) => (
-        <button key={attempt.id} onClick={() => onOpen(attempt)} className="group flex w-full items-center gap-3 px-5 py-4 text-left transition-colors hover:bg-[#F8F9FC]">
+        <button key={attempt.id} onClick={() => onOpen(attempt)} className="group flex w-full items-center gap-3 px-5 py-4 text-left transition-colors hover:bg-white/45">
           <span className="flex h-9 w-9 flex-none items-center justify-center rounded-xl bg-[#F3F5FB] text-[#344FA5]"><BookOpenCheck size={16} /></span>
           <span className="min-w-0 flex-1">
             <span className="block truncate text-sm font-semibold text-[#192136]">{attempt.exam_title || 'Untitled exam'}</span>
@@ -232,7 +232,7 @@ function DashboardOverview({ user, stats, attempts, exams, onNavigate, onOpenAtt
       </motion.section>
 
       <motion.section variants={reveal} className="grid gap-5 xl:grid-cols-[1.05fr_.95fr]">
-        <div className="overflow-hidden rounded-2xl border border-[#E6E9F0] bg-white">
+        <div className="glass-surface overflow-hidden rounded-2xl">
           <div className="flex items-start justify-between gap-4 border-b border-[#EAECF1] px-5 py-5">
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#6E7789]">Next move</p>
@@ -248,7 +248,7 @@ function DashboardOverview({ user, stats, attempts, exams, onNavigate, onOpenAtt
           </div>
         </div>
 
-        <div className="overflow-hidden rounded-2xl border border-[#E6E9F0] bg-white">
+        <div className="glass-surface overflow-hidden rounded-2xl">
           <div className="flex items-center justify-between border-b border-[#EAECF1] px-5 py-5">
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#6E7789]">Recent activity</p>
@@ -260,7 +260,7 @@ function DashboardOverview({ user, stats, attempts, exams, onNavigate, onOpenAtt
         </div>
       </motion.section>
 
-      <motion.section variants={reveal} className="rounded-2xl border border-[#E6E9F0] bg-white p-5">
+      <motion.section variants={reveal} className="glass-surface rounded-2xl p-5">
         <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#6E7789]">Matched practice</p>
@@ -271,7 +271,7 @@ function DashboardOverview({ user, stats, attempts, exams, onNavigate, onOpenAtt
         {exams.length ? (
           <div className="grid gap-3 md:grid-cols-3">
             {exams.slice(0, 3).map((exam) => (
-              <button key={exam.id} onClick={() => { window.location.assign(`/exam/${exam.id}`); }} className="group rounded-xl border border-[#EAECF1] p-4 text-left transition-all hover:-translate-y-0.5 hover:border-[#C9D2EC] hover:shadow-[0_8px_18px_rgba(18,35,79,0.07)]">
+              <button key={exam.id} onClick={() => { window.location.assign(`/exam/${exam.id}`); }} className="group rounded-xl border border-white/70 bg-white/35 p-4 text-left transition-all hover:-translate-y-0.5 hover:border-white hover:bg-white/55 hover:shadow-[0_8px_18px_rgba(18,35,79,0.06)]">
                 <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#7C8495]">{exam.goal || 'Practice exam'}</span>
                 <span className="mt-2 block min-h-10 text-sm font-semibold leading-5 text-[#192136]">{exam.title}</span>
                 <span className="mt-3 flex items-center justify-between text-xs text-[#7A8395]"><span>{exam.duration_minutes} min · {exam.total_marks} marks</span><Play size={13} className="text-[#3855A5] transition-transform group-hover:translate-x-0.5" /></span>
@@ -279,7 +279,7 @@ function DashboardOverview({ user, stats, attempts, exams, onNavigate, onOpenAtt
             ))}
           </div>
         ) : (
-          <div className="rounded-xl border border-dashed border-[#DCE1EB] bg-[#FAFBFD] px-5 py-8 text-center">
+          <div className="glass-surface-soft rounded-xl border-dashed px-5 py-8 text-center">
             <p className="text-sm font-medium text-[#4F5A70]">No matched exams yet.</p>
             <button onClick={() => onNavigate('settings')} className="mt-2 text-xs font-bold text-[#3452A4] hover:underline">Complete your profile to improve matching</button>
           </div>
@@ -303,7 +303,7 @@ function PerformanceView({ stats, attempts, onOpenAttempt }: { stats: any; attem
         <SignalCard label="Average score" metric={stats?.avg_score == null ? '—' : value(stats.avg_score)} detail="Across all submitted attempts" icon={Trophy} />
         <SignalCard label="Best percentile" metric={bestPercentile === null ? '—' : String(bestPercentile)} detail="Within your recent attempt list" icon={BarChart3} />
       </motion.div>
-      <motion.div variants={reveal} className="overflow-hidden rounded-2xl border border-[#E6E9F0] bg-white">
+      <motion.div variants={reveal} className="glass-surface overflow-hidden rounded-2xl">
         <div className="border-b border-[#EAECF1] px-5 py-5">
           <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#6E7789]">Practice record</p>
           <h3 className="mt-1 text-lg font-semibold tracking-[-0.025em] text-[#151D31]">All recent attempts</h3>
@@ -367,7 +367,7 @@ function DashboardContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#F4F6FB] px-6 py-8">
+      <div className="dashboard-shell min-h-screen px-6 py-8">
         <div className="mx-auto max-w-6xl animate-pulse">
           <div className="h-12 w-48 rounded-xl bg-[#E7EAF2]" />
           <div className="mt-8 h-64 rounded-3xl bg-[#E7EAF2]" />
@@ -378,7 +378,7 @@ function DashboardContent() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F4F6FB] font-sans text-[#161E31]">
+    <div className="dashboard-shell min-h-screen font-sans text-[#161E31]">
       <GrowlySidebar activeNav={activeNav} setActiveNav={setActiveNav} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} />
       <div className="min-w-0 md:ml-[272px]">
         <GrowlyHeader userName={user?.name ?? ''} targetGoal={user?.target_goal ?? ''} onMenuClick={() => setMobileOpen(true)} onProfileClick={() => setActiveNav('settings')} />
@@ -405,5 +405,5 @@ function DashboardContent() {
 }
 
 export default function Dashboard() {
-  return <Suspense fallback={<div className="min-h-screen bg-[#F4F6FB]" />}><DashboardContent /></Suspense>;
+  return <Suspense fallback={<div className="dashboard-shell min-h-screen" />}><DashboardContent /></Suspense>;
 }
