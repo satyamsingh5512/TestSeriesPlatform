@@ -53,7 +53,7 @@ export function GrowlySidebar({ activeNav, setActiveNav, mobileOpen, setMobileOp
   };
 
   const sidebar = (
-    <div className="glass-sidebar-dark flex h-full w-[272px] flex-col px-4 py-5 text-white">
+    <div className="flex h-full w-[272px] flex-col bg-[#111A36] px-4 py-5 text-white">
       <div className="flex items-center justify-between px-2 pb-6">
         <div className="flex items-center gap-3">
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#E7B45B] text-[#17203B] shadow-[0_7px_18px_rgba(231,180,91,.2)]"><Target size={18} strokeWidth={2.5} /></span>
@@ -74,7 +74,7 @@ export function GrowlySidebar({ activeNav, setActiveNav, mobileOpen, setMobileOp
       <div className="mb-3 px-3 text-[9px] font-bold uppercase tracking-[0.2em] text-[#7889B1]">Account</div>
       <SidebarItem item={{ id: 'settings', label: 'Profile', caption: 'Goals & study details', icon: CircleUserRound }} active={activeNav === 'settings'} onClick={() => choose('settings')} />
 
-      <div className="mt-auto rounded-2xl border border-white/[0.11] bg-white/[0.055] p-3 backdrop-blur-sm">
+      <div className="mt-auto rounded-2xl border border-white/[0.09] bg-white/[0.045] p-3">
         <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#94A4C4]">Preparation tip</p>
         <p className="mt-2 text-xs leading-5 text-[#C1CAE0]">Review each attempt before starting another one. Your analysis is the study plan.</p>
       </div>

@@ -86,7 +86,7 @@ export default function AdminUsersPage() {
 
       <div className="panel overflow-hidden border-themeBorder">
         <table className="w-full text-left text-sm whitespace-nowrap">
-          <thead className="border-b border-white/60 bg-white/30 text-xs font-semibold uppercase tracking-widest text-muted backdrop-blur-sm">
+          <thead className="bg-panel-hover border-b border-themeBorder text-xs uppercase tracking-widest text-muted font-semibold">
             <tr>
               <th className="px-6 py-4">User</th>
               <th className="px-6 py-4">Role</th>
@@ -96,7 +96,7 @@ export default function AdminUsersPage() {
           </thead>
           <tbody className="divide-y divide-themeBorder">
             {users.map(u => (
-              <tr key={u.id} className="transition-colors hover:bg-white/35">
+              <tr key={u.id} className="hover:bg-panel-hover transition-colors">
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-panel flex items-center justify-center border border-themeBorder text-muted">
@@ -141,7 +141,7 @@ export default function AdminUsersPage() {
       <AnimatePresence>
         {isModalOpen && (
           <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-            <motion.div initial={{scale:0.95}} animate={{scale:1}} exit={{scale:0.95}} className="glass-surface-strong w-full max-w-md rounded-2xl p-6">
+            <motion.div initial={{scale:0.95}} animate={{scale:1}} exit={{scale:0.95}} className="panel w-full max-w-md p-6 bg-[var(--bg-base)]">
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-lg font-bold text-highlight">{editingUser ? 'Edit User' : 'Add New User'}</h3>
                 <button onClick={() => setModalOpen(false)} className="text-muted hover:text-highlight"><X className="w-5 h-5"/></button>

@@ -9,8 +9,8 @@ const jetbrainsMono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-jet
 const calistoga = Calistoga({ weight: '400', subsets: ['latin'], variable: '--font-calistoga' });
 
 export const metadata: Metadata = {
-  title: "ExamForge | Online Assessment & Exam Platform",
-  description: "Create, deliver, and analyze secure online assessments with adaptive testing, automatic scoring, integrity monitoring, and detailed performance reports.",
+  title: "ExamForge Platform",
+  description: "High-Stakes Examination Platform",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

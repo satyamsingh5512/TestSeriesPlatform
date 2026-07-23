@@ -37,7 +37,7 @@ export function RecommendedExams() {
   if (loading) {
     return (
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {[0, 1, 2].map((item) => <div key={item} className="glass-surface-soft h-56 animate-pulse rounded-2xl" />)}
+        {[0, 1, 2].map((item) => <div key={item} className="h-56 animate-pulse rounded-2xl border border-[#E6E9F0] bg-white" />)}
       </div>
     );
   }
@@ -48,7 +48,7 @@ export function RecommendedExams() {
 
   if (!exams.length) {
     return (
-      <div className="glass-surface rounded-2xl border-dashed px-6 py-14 text-center">
+      <div className="rounded-2xl border border-dashed border-[#D8DEE9] bg-white px-6 py-14 text-center">
         <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-xl bg-[#F4F6FB] text-[#3855A5]"><Target size={19} /></span>
         <h3 className="mt-4 text-base font-semibold text-[#182136]">No matched practice yet</h3>
         <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-[#727C91]">Update your target exam and study profile, then return here for more relevant practice.</p>
@@ -60,7 +60,7 @@ export function RecommendedExams() {
   return (
     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
       {exams.map((exam, index) => (
-        <article key={exam.id} className="glass-surface group flex min-h-[240px] flex-col rounded-2xl p-5 transition-all duration-200 hover:-translate-y-1 hover:border-white hover:bg-white/80 hover:shadow-[0_14px_28px_rgba(22,37,80,.08)]">
+        <article key={exam.id} className="group flex min-h-[240px] flex-col rounded-2xl border border-[#E3E7EF] bg-white p-5 shadow-[0_1px_1px_rgba(15,23,42,.02)] transition-all duration-200 hover:-translate-y-1 hover:border-[#C5D0EC] hover:shadow-[0_14px_28px_rgba(22,37,80,.09)]">
           <div className="flex items-start justify-between gap-3">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-[#F2F5FF] px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.1em] text-[#3855A5]"><Sparkles size={11} /> {index < 3 ? 'Strong match' : 'Recommended'}</span>
             <span className="rounded-lg bg-[#F8F9FC] px-2 py-1 text-[10px] font-bold uppercase tracking-[0.09em] text-[#778196]">{exam.exam_type}</span>

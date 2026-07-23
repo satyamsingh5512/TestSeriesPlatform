@@ -58,7 +58,7 @@ export default function AdminFeaturesPage() {
 
       <div className="panel overflow-hidden">
         <table className="w-full text-left text-sm whitespace-nowrap">
-          <thead className="border-b border-white/60 bg-white/30 text-xs font-semibold uppercase tracking-widest text-muted backdrop-blur-sm">
+          <thead className="bg-panel-hover border-b border-themeBorder text-xs uppercase tracking-widest text-muted font-semibold">
             <tr>
               <th className="px-6 py-4">Module Name</th>
               <th className="px-6 py-4">Internal Key</th>
@@ -68,7 +68,7 @@ export default function AdminFeaturesPage() {
           </thead>
           <tbody className="divide-y divide-themeBorder">
             {features.map(f => (
-              <tr key={f.feature_key} className="transition-colors hover:bg-white/35">
+              <tr key={f.feature_key} className="hover:bg-panel-hover transition-colors">
                 <td className="px-6 py-4">
                   <p className="font-medium text-primary">{f.title}</p>
                   <p className="text-xs text-muted truncate max-w-[300px]">{f.description}</p>
@@ -92,7 +92,7 @@ export default function AdminFeaturesPage() {
 
       {editing && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="glass-surface-strong w-full max-w-lg rounded-2xl p-6 animate-fadeIn md:p-8">
+          <div className="panel w-full max-w-lg p-6 md:p-8 animate-fadeIn">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-bold text-highlight">Edit Module: {editing.feature_key}</h2>
               <button onClick={() => setEditing(null)} className="text-muted hover:text-error"><X className="w-5 h-5"/></button>

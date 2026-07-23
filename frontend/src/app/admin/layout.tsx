@@ -13,9 +13,9 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
   const brandLogo = tenant?.logo_url || null;
 
   return (
-    <div className="dashboard-shell flex min-h-screen flex-col font-sans text-[var(--text-primary)] md:flex-row">
+    <div className="flex flex-col md:flex-row min-h-screen bg-[var(--bg-base)] text-[var(--text-primary)] font-sans">
       {/* Sidebar */}
-      <aside className="glass-sidebar sticky top-0 z-20 flex w-full flex-col gap-8 border-r p-6 md:h-screen md:w-64">
+      <aside className="w-full md:w-64 border-r border-[var(--border)] bg-[var(--bg-base)]/50 backdrop-blur-xl p-6 flex flex-col gap-8 sticky top-0 md:h-screen z-20">
         <div className="flex items-center gap-3 text-[var(--text-highlight)] px-2">
           {brandLogo ? (
             <img src={brandLogo} alt={brandName} className="w-8 h-8 object-contain" />
@@ -37,7 +37,7 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
 
         <div className="pt-6 border-t border-[var(--border)] space-y-4">
           <div className="flex gap-2">
-            <button onClick={() => { document.body.classList.toggle('dark-theme'); localStorage.setItem('theme', document.body.classList.contains('dark-theme') ? 'dark' : 'light'); }} className="flex-1 btn h-9 bg-[var(--bg-panel)] border-[var(--border)] hover:bg-[var(--bg-panel-hover)] flex justify-center text-[var(--text-muted)]">
+            <button onClick={() => { document.body.classList.toggle('light-theme'); localStorage.setItem('theme', document.body.classList.contains('light-theme') ? 'light' : 'dark'); }} className="flex-1 btn h-9 bg-[var(--bg-panel)] border-[var(--border)] hover:bg-[var(--bg-panel-hover)] flex justify-center text-[var(--text-muted)]">
               <Sun className="w-4 h-4"/>
             </button>
             <button onClick={() => { localStorage.clear(); router.push('/'); }} className="flex-1 btn h-9 bg-[var(--bg-panel)] border-[var(--border)] hover:bg-[var(--bg-panel-hover)] flex justify-center text-[var(--text-muted)] hover:text-error transition-colors">
@@ -67,7 +67,7 @@ function NavItem({ icon, label, active, href }: { icon: any, label: string, acti
     </>
   );
   
-  const className = `w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-200 text-sm font-semibold ${active ? 'border border-white/80 bg-white/65 text-accent shadow-[0_5px_16px_rgba(30,50,90,.07)] backdrop-blur-sm' : 'text-[var(--text-muted)] hover:bg-white/45 hover:text-[var(--text-highlight)]'}`;
+  const className = `w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-200 text-sm font-semibold ${active ? 'bg-[var(--text-highlight)] text-[var(--bg-base)]' : 'text-[var(--text-muted)] hover:bg-[var(--bg-panel-hover)] hover:text-[var(--text-highlight)]'}`;
 
   return (
     <a href={href} className={className}>

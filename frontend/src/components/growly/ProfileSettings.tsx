@@ -18,7 +18,7 @@ interface ProfileSettingsProps {
 }
 
 const emptyForm: ProfileForm = { name: '', age: '', study_level: '', stream: '', course: '', target_goal: '' };
-const fieldClass = 'w-full rounded-xl border border-white/80 bg-white/60 px-3.5 py-2.5 backdrop-blur-sm text-sm text-[#1A2337] outline-none transition placeholder:text-[#A5ADBC] hover:border-[#C8CFDC] focus:border-[#6F84C2] focus:ring-4 focus:ring-[#DDE5FA]';
+const fieldClass = 'w-full rounded-xl border border-[#DCE1EA] bg-white px-3.5 py-2.5 text-sm text-[#1A2337] outline-none transition placeholder:text-[#A5ADBC] hover:border-[#C8CFDC] focus:border-[#6F84C2] focus:ring-4 focus:ring-[#DDE5FA]';
 
 export function ProfileSettings({ onProfileSaved }: ProfileSettingsProps) {
   const [form, setForm] = useState<ProfileForm>(emptyForm);
@@ -79,12 +79,12 @@ export function ProfileSettings({ onProfileSaved }: ProfileSettingsProps) {
   };
 
   if (loading) {
-    return <div className="glass-surface max-w-3xl animate-pulse rounded-2xl p-6"><div className="h-6 w-44 rounded bg-[#E9ECF2]" /><div className="mt-7 grid gap-4 sm:grid-cols-2"><div className="h-12 rounded-xl bg-[#EDF0F4]" /><div className="h-12 rounded-xl bg-[#EDF0F4]" /></div></div>;
+    return <div className="max-w-3xl animate-pulse rounded-2xl border border-[#E6E9F0] bg-white p-6"><div className="h-6 w-44 rounded bg-[#E9ECF2]" /><div className="mt-7 grid gap-4 sm:grid-cols-2"><div className="h-12 rounded-xl bg-[#EDF0F4]" /><div className="h-12 rounded-xl bg-[#EDF0F4]" /></div></div>;
   }
 
   return (
-    <div className="glass-surface max-w-3xl overflow-hidden rounded-2xl">
-      <div className="border-b border-white/65 bg-white/28 px-5 py-5 sm:px-6">
+    <div className="max-w-3xl overflow-hidden rounded-2xl border border-[#E2E6EE] bg-white shadow-[0_8px_24px_rgba(27,39,78,.04)]">
+      <div className="border-b border-[#E9ECF1] bg-[#FAFBFD] px-5 py-5 sm:px-6">
         <div className="flex items-start gap-3">
           <span className="flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-[#1C2D63] text-[#F1C567]"><Target size={18} /></span>
           <div>
