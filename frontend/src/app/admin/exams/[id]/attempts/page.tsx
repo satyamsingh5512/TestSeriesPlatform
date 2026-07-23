@@ -46,7 +46,7 @@ export default function ExamAttemptsPage() {
       ) : (
         <div className="panel overflow-hidden">
           <table className="w-full text-left text-sm whitespace-nowrap">
-            <thead className="bg-panel-hover border-b border-themeBorder text-xs uppercase tracking-widest text-muted font-semibold">
+            <thead className="border-b border-white/60 bg-white/30 text-xs font-semibold uppercase tracking-widest text-muted backdrop-blur-sm">
               <tr>
                 <th className="px-6 py-4">Student</th>
                 <th className="px-6 py-4">Status</th>
@@ -57,7 +57,7 @@ export default function ExamAttemptsPage() {
             </thead>
             <tbody className="divide-y divide-themeBorder">
               {attempts.map(att => (
-                <tr key={att.id} className="hover:bg-panel-hover transition-colors">
+                <tr key={att.id} className="transition-colors hover:bg-white/35">
                   <td className="px-6 py-4">
                     <p className="font-medium text-primary">{att.student_name}</p>
                     <p className="text-xs text-muted">{att.email}</p>
