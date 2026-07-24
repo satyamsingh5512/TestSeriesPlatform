@@ -3,7 +3,8 @@ import { useEffect, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import axios from 'axios';
 import { useProctor } from '@/hooks/useProctor';
-import { ShieldCheck, Camera, MapPin, Clipboard, AlertTriangle, Menu, X, ArrowRight, ArrowLeft, Languages, Clock } from 'lucide-react';
+import { useAntiCheat } from '@/hooks/useAntiCheat';
+import { ShieldCheck, Camera, MapPin, Clipboard, AlertTriangle, Menu, X, ArrowRight, ArrowLeft, Languages, Clock, Maximize, Ban } from 'lucide-react';
 import { ConsentModal } from '@/components/auth/ConsentModal';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -30,6 +31,12 @@ export default function ExamPage() {
   const [user, setUser] = useState<any>(null);
   const [isPaletteOpen, setIsPaletteOpen] = useState(false);
   const [language, setLanguage] = useState<'EN' | 'HI'>('EN');
+  const [warningCount, setWarningCount] = useState(0);
+  const [blockedToast, setBlockedToast] = useState<string | null>(null);
+  const [needsFullscreen, setNeedsFullscreen] = useState(false);
+
+  const MAX_WARNINGS = 2;
+  const blockedToastTimer = useRef<any>(null);
 
   const attemptIdRef = useRef<string | null>(null);
   const timerRef = useRef<any>(null);
@@ -81,21 +88,38 @@ export default function ExamPage() {
     init();
   }, [id, router]);
 
-  useEffect(() => {
-    if (!permissionsGranted || loading || submitted || isLocked) return;
-    const handleExit = () => { setProctorAlert('Violation: Fullscreen Exit. Attempt Locked.'); setIsLocked(true); handleSubmit(true, 'fullscreen_exit'); };
-    const handleTab = () => { setProctorAlert('Violation: Tab Switch. Attempt Locked.'); setIsLocked(true); handleSubmit(true, 'tab_switch'); };
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'F12' || (e.altKey && e.key === 'Tab')) e.preventDefault(); };
+  const { disarm } = useAntiCheat({
+    attemptId: attemptIdRef.current,
+    enabled: permissionsGranted && !loading && !submitted && !isLocked,
+    maxWarnings: MAX_WARNINGS,
+    onWarning: ({ count, max, message }) => {
+      setWarningCount(count);
+      setProctorAlert(`Warning ${count} of ${max}: ${message} One more violation will terminate your attempt.`);
+    },
+    onTerminate: (reason) => {
+      setProctorAlert('Attempt terminated: proctoring rules were violated repeatedly.');
+      setNeedsFullscreen(false);
+      setIsLocked(true);
+      handleSubmit(true, reason);
+    },
+    onBlocked: ({ message }) => {
+      setBlockedToast(message);
+      if (blockedToastTimer.current) clearTimeout(blockedToastTimer.current);
+      blockedToastTimer.current = setTimeout(() => setBlockedToast(null), 2500);
+    },
+    onFullscreenExit: ({ terminating }) => {
+      if (!terminating) setNeedsFullscreen(true);
+    },
+  });
 
-    const onFullscreenChange = () => { if (!document.fullscreenElement && !submittedRef.current) handleExit(); };
-    const onVisibilityChange = () => { if (document.hidden && !submittedRef.current) handleTab(); };
-
-    document.addEventListener('fullscreenchange', onFullscreenChange);
-    document.addEventListener('visibilitychange', onVisibilityChange);
-    document.addEventListener('keydown', onKey);
-
-    return () => { document.removeEventListener('fullscreenchange', onFullscreenChange); document.removeEventListener('visibilitychange', onVisibilityChange); document.removeEventListener('keydown', onKey); };
-  }, [permissionsGranted, loading, submitted, isLocked]);
+  const resumeFullscreen = async () => {
+    try {
+      await document.documentElement.requestFullscreen();
+      setNeedsFullscreen(false);
+    } catch {
+      /* user must retry via the gate button */
+    }
+  };
 
   useEffect(() => {
     if (!permissionsGranted || loading || submitted) return;
@@ -106,8 +130,10 @@ export default function ExamPage() {
   const handleSubmit = async (auto = false, reason: string | null = null) => {
     if (submitted) return;
     if (!auto && !confirm('Confirm execution completion?')) return;
+    disarm();
     submittedRef.current = true;
     setSubmitted(true); setIsLocked(true);
+    setNeedsFullscreen(false);
     clearInterval(timerRef.current);
     if (document.fullscreenElement) {
       try { await document.exitFullscreen(); } catch (e) {}
@@ -164,7 +190,15 @@ export default function ExamPage() {
           <ShieldCheck className="w-6 h-6 text-blue-600" />
           <h1 className="text-2xl font-bold font-display text-slate-900">Environment Validation</h1>
         </div>
-        <p className="text-sm text-slate-500 mb-8 leading-relaxed font-medium">System requirements: Fullscreen context, Camera active, Geolocation, Clipboard lock.</p>
+        <p className="text-sm text-slate-500 mb-4 leading-relaxed font-medium">System requirements: Fullscreen context, Camera active, Geolocation, Clipboard lock.</p>
+        <div className="bg-rose-50 border border-rose-100 rounded-xl p-4 mb-8">
+          <p className="text-xs font-bold text-rose-700 uppercase tracking-wide mb-2 flex items-center gap-2"><ShieldCheck className="w-4 h-4" /> Proctoring Rules</p>
+          <ul className="text-xs text-rose-600/90 font-medium space-y-1 list-disc list-inside">
+            <li>Stay in fullscreen. Switching tabs or windows is recorded.</li>
+            <li>Copy, paste, right-click and dev-tools shortcuts are disabled.</li>
+            <li>You are allowed {MAX_WARNINGS} warnings — the next violation auto-submits your test.</li>
+          </ul>
+        </div>
         
         <div className="space-y-4 mb-10">
           <div className="bg-slate-50 p-4 rounded-xl flex items-center justify-between border border-slate-200">
@@ -241,6 +275,51 @@ export default function ExamPage() {
           <AlertTriangle className="w-5 h-5"/> {proctorAlert}
         </motion.div>
       )}
+
+      {/* Blocked-action toast (copy / paste / right-click / forbidden key) */}
+      <AnimatePresence>
+        {blockedToast && (
+          <motion.div
+            initial={{ opacity: 0, y: 20, x: '-50%' }}
+            animate={{ opacity: 1, y: 0, x: '-50%' }}
+            exit={{ opacity: 0, y: 20, x: '-50%' }}
+            className="fixed bottom-28 left-1/2 z-[55] bg-slate-900 text-white px-5 py-3 rounded-xl font-bold shadow-2xl text-sm flex items-center gap-2 border border-slate-700"
+          >
+            <Ban className="w-4 h-4 text-rose-400" /> {blockedToast}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Fullscreen re-entry gate — blocks the exam until the student returns to fullscreen */}
+      <AnimatePresence>
+        {needsFullscreen && !submitted && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[70] bg-slate-900/95 backdrop-blur-sm flex items-center justify-center p-6"
+          >
+            <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-md w-full p-8 text-center">
+              <div className="w-14 h-14 rounded-full bg-rose-100 flex items-center justify-center mx-auto mb-5">
+                <AlertTriangle className="w-7 h-7 text-rose-600" />
+              </div>
+              <h2 className="text-xl font-bold text-slate-900 mb-2 font-display">Fullscreen Required</h2>
+              <p className="text-sm text-slate-500 font-medium mb-2 leading-relaxed">
+                You left fullscreen mode. This has been recorded as a proctoring violation.
+              </p>
+              <p className="text-sm font-bold text-rose-600 mb-6">
+                Warning {warningCount} of {MAX_WARNINGS}. Exceeding the limit will terminate your attempt.
+              </p>
+              <button
+                onClick={resumeFullscreen}
+                className="w-full bg-slate-900 text-white py-4 rounded-xl font-bold text-base shadow-lg shadow-slate-900/20 hover:bg-slate-800 transition-colors flex items-center justify-center gap-2"
+              >
+                <Maximize className="w-5 h-5" /> Return to Fullscreen &amp; Resume
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       
       {/* Mini Cam */}
       <div className="fixed bottom-24 right-8 lg:bottom-6 lg:right-[340px] z-50 w-24 h-16 bg-black rounded-lg overflow-hidden shadow-lg border-2 border-white">
