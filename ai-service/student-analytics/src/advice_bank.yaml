@@ -1,0 +1,132 @@
+# Advice shown to students. Edit freely - no code changes needed.
+#
+# mistake_types: the generic advice for each failure mode (required).
+# topic_overrides: optional topic-specific replacement for how_to_fix.
+# segment_advice: one paragraph of strategy per cluster name from segmentation.
+
+mistake_types:
+  guessing_or_rushing:
+    label: Rushing and guessing
+    what_is_happening: >
+      You are answering these questions faster than almost everyone else, and
+      getting them wrong. The speed is the problem, not the syllabus - you are
+      committing to an answer before you have finished reading the question.
+    how_to_fix: >
+      Force a slower first pass: read every question twice before touching an
+      option, and underline what is actually being asked. Practise in timed sets
+      of 10 with a hard rule that you may not mark an answer in under 30 seconds.
+      Track how many you get right, not how fast you finish.
+
+  conceptual_gap:
+    label: Genuine concept gap
+    what_is_happening: >
+      You are spending longer than your peers on these questions and still
+      getting them wrong, without much second-guessing. That pattern means the
+      underlying concept has not landed - you are deriving from scratch instead
+      of recognising the standard form.
+    how_to_fix: >
+      Stop doing timed practice on this topic for now. Go back to the theory,
+      work through 5 solved examples with the solution visible, then attempt 10
+      easy-tier questions untimed. Only return to full-length papers once you can
+      clear the easy tier at 80%.
+
+  shaky_concept_second_guessing:
+    label: Unsure and changing answers
+    what_is_happening: >
+      You take a long time on these and change your answer repeatedly. You half
+      know the material - enough to distrust your first instinct, not enough to
+      confirm it. Answer-changing at this rate usually costs more marks than it
+      saves.
+    how_to_fix: >
+      Two fixes in parallel. Revise the core concept so your first instinct gets
+      better. Then impose a commit rule in practice: your first marked answer
+      stands unless you can state in one sentence what new information changed
+      your mind. Log every change and check afterwards how many were right to make.
+
+  correct_but_slow:
+    label: Accurate but not fluent
+    what_is_happening: >
+      You are getting these right, which is the hard part - but you are well
+      over the cohort's time per question. In a full paper that time comes out of
+      the questions you never reach.
+    how_to_fix: >
+      Drill for speed on material you already know. Sets of 15 questions with a
+      per-question timer set to the cohort average. Learn the standard shortcuts
+      and recognise question templates so you stop re-deriving each time.
+
+  mastered:
+    label: Strong
+    what_is_happening: >
+      Consistently high accuracy at a reasonable pace. This topic is not where
+      your marks are being lost.
+    how_to_fix: >
+      Move to harder papers on this topic rather than repeating the same tier.
+      Keep it warm with a short revision set every couple of weeks.
+
+  on_track:
+    label: On track
+    what_is_happening: >
+      Around the cohort average - no specific failure pattern showing.
+    how_to_fix: >
+      Keep steady practice going. Push for the next accuracy band by reviewing
+      every wrong answer and writing down the reason it was wrong.
+
+# Optional topic-specific replacements for how_to_fix.
+topic_overrides:
+  Calculus:
+    conceptual_gap: >
+      Rebuild from limits before touching integration. Work the standard
+      derivative and integral table until recall is automatic, then do 10
+      untimed substitution problems before returning to mixed papers.
+  Mechanics:
+    conceptual_gap: >
+      Almost every Mechanics error traces back to the free-body diagram. Draw one
+      for every single question for two weeks, even when it seems unnecessary,
+      and resolve forces along the motion before writing any equation.
+  Current Affairs:
+    conceptual_gap: >
+      This is a coverage problem, not a reasoning one. Set up a daily 15-minute
+      habit with one source and a running one-page note, and revise the last six
+      months weekly. Cramming does not work for this topic.
+  Genetics:
+    conceptual_gap: >
+      Work Punnett squares and pedigree charts by hand until the notation stops
+      slowing you down, then move on to probability-based crosses.
+  Probability:
+    shaky_concept_second_guessing: >
+      Your answer-changing here usually comes from mixing up "and" versus "or"
+      conditions. Write the sample space explicitly for every question before
+      computing anything - it removes the ambiguity that makes you switch.
+
+# Strategy advice per segment, keyed on the names produced by segmentation.
+segment_advice:
+  High Performers: >
+    You are ahead of the cohort. The gains left are at the top of the difficulty
+    curve, so shift your practice to advanced and elite tier papers and treat
+    anything below moderate as revision only.
+  Slow but Accurate: >
+    Your accuracy is genuinely strong - time is the only thing standing between
+    you and a top percentile. Practise under strict clock discipline: allocate a
+    per-question budget, and train yourself to skip and return rather than
+    grinding through the hardest question in order.
+  Fast but Careless: >
+    You have more ability than your scores show. You are losing marks to speed,
+    not to syllabus. Slowing down by 20% would likely move you up a band
+    immediately. Use the full time allowance - finishing early gains you nothing.
+  Strong with One Blind Spot: >
+    Your overall profile is solid and being dragged down by a small number of
+    topics. Do not spread effort evenly - put the majority of your study time
+    into the specific weak topics listed below and keep everything else ticking
+    over with light revision.
+  Consistently Struggling: >
+    The gaps here are broad rather than topic-specific, so chasing full-length
+    mock papers will not help yet. Rebuild from foundation-tier material one
+    topic at a time and only progress once each clears 70%.
+  Developing: >
+    You are building steadily. Stay on easy and moderate tier papers, review
+    every incorrect answer, and move up a tier only once you are consistently
+    above 70% on the current one.
+  Steady All-Rounders: >
+    A balanced profile with no single glaring weakness. Progress will come from
+    incremental difficulty increases and from tightening the topics where you sit
+    just below your own average.
